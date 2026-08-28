@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIME AI</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+
+<div class="page active" id="pageAnalysis">
+  <div class="container">
+    <div class="header">
+      <div class="logo"><div class="logo-icon">P</div><div class="logo-text">PRIME AI</div></div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="toggleApiSettings()" title="Configurações">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <h1 class="section-title"><span>Análise</span><span>Multi-Timeframe</span></h1>
+
+    <div class="requests-counter">
+      <span class="requests-counter-label">Requisições hoje</span>
+      <span class="requests-counter-value" id="requestsCounter">0/20</span>
+    </div>
+
+    <div class="api-section" id="apiSection">
+      <div class="card">
+        <div class="api-toggle" id="apiToggle" onclick="toggleApiContent()">
+          <span class="api-toggle-text">⚙️ Configurações</span>
+          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="api-content" id="apiContent">
+          <div style="padding: 0 2px 8px;">
+            <div class="api-row"><span class="api-label">Gemini</span><input type="password" class="api-input" id="geminiApiKey" placeholder="API Key do Gemini"></div>
+            <div class="api-row"><span class="api-label">Modelo</span><input type="text" class="api-input" id="geminiModel" value="gemini-2.0-flash"></div>
+            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px; padding: 8px; background: #0a0a0a; border-radius: 8px;">💡 Use <strong style="color: var(--green);">gemini-2.0-flash</strong></div>
+            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">🎨 Visualização</div>
+              <div class="toggle-row">
+                <div class="toggle-info"><div class="toggle-title">Tabela Visual Automática</div><div class="toggle-desc">IA preenche dados estruturados para os cards visuais</div></div>
+                <label class="toggle-switch"><input type="checkbox" id="toggleVisualTable" checked onchange="saveToggle('visualTable', this.checked)"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-title">🧪 Modo Experimental (sem Firebase)</div>
+                  <div class="toggle-desc">Salva dados no navegador. Dados serão perdidos ao recarregar. Ative para testar sem Firebase.</div>
+                </div>
+                <label class="toggle-switch"><input type="checkbox" id="toggleExperimental" checked onchange="saveToggle('experimental', this.checked)"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+            <button class="btn-secondary" onclick="copyCurrentPrompt()" style="margin-top: 12px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copiar Prompt Atual
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="asset-label">Ativo</div>
+      <div class="asset-selector">
+        <button class="asset-btn" id="assetBtn" onclick="toggleAssetDropdown()">
+          <div class="asset-btn-left"><div class="asset-icon" id="selectedAssetIcon">₿</div><div><span id="selectedAssetName">BTCUSDT</span></div></div>
+          <div class="asset-btn-right"><span>Selecionar</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+        </button>
+        <div class="asset-dropdown" id="assetDropdown"></div>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="asset-label">Data e Hora do Gráfico</div>
+      <div style="display: flex; gap: 8px;">
+        <input type="datetime-local" class="date-input" id="chartDate" style="flex: 1;">
+        <button class="btn-secondary" style="margin-top: 0; width: auto; padding: 10px 14px; font-size: 12px;" onclick="setNow()">Agora</button>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="card" style="padding: 14px;">
+        <div class="api-toggle" id="promptToggle" onclick="togglePromptContent()">
+          <span class="api-toggle-text" style="font-size: 13px;">✏️ Prompt Personalizado</span>
+          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="api-content" id="promptContent">
+          <textarea class="api-input" id="customPrompt" rows="6" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeframes" id="timeframesSection">
+      <div class="tf-card" id="tf-4h"><div class="tf-label">4H</div><div class="tf-status" id="tf-4h-status">Aguardando</div></div>
+      <div class="tf-card" id="tf-1h"><div class="tf-label">1H</div><div class="tf-status" id="tf-1h-status">Aguardando</div></div>
+      <div class="tf-card" id="tf-15m"><div class="tf-label">15M</div><div class="tf-status" id="tf-15m-status">Aguardando</div></div>
+      <div class="tf-card" id="tf-5m"><div class="tf-label">5M</div><div class="tf-status" id="tf-5m-status">Aguardando</div></div>
+    </div>
+
+    <div class="action-section">
+      <button class="btn-primary" id="analyzeBtn" onclick="startAnalysis()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+        <span id="analyzeBtnText">Analisar</span>
+      </button>
+      <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+        <span>Adicionar imagens manualmente</span>
+      </button>
+      <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFileUpload(event)" style="display: none;">
+    </div>
+
+    <div id="uploadSection" style="display: none;">
+      <div class="asset-label">Imagens Enviadas</div>
+      <div class="print-preview-grid" id="uploadedImages"></div>
+    </div>
+
+    <div class="result-section" id="resultSection" style="display: none;">
+      <div class="result-header">
+        <div class="result-title">Análise <span id="sourceBadge"></span></div>
+        <div class="result-time" id="resultTime"></div>
+      </div>
+
+      <div id="analysisTabsContainer" style="display: none;">
+        <div class="analysis-tabs" id="analysisTabs"></div>
+      </div>
+
+      <div class="chart-container" id="chartContainer" style="display: none;">
+        <div class="chart-header">
+          <div class="chart-title"> Gráfico com Sinais</div>
+          <button class="chart-pnl-btn" onclick="openPnLModal()">💰 PnL Realizado</button>
+        </div>
+        <div class="chart-view-toggle">
+          <button class="chart-view-btn active" id="viewTV" onclick="switchChartView('tv')">TradingView</button>
+          <button class="chart-view-btn highlight" id="viewCustom" onclick="switchChartView('custom')">✨ Com Sinais</button>
+        </div>
+        <div class="chart-tf-label" id="signalTfLabel">Timeframe: 1H</div>
+        <div class="chart-tf-selector" id="signalTfSelector">
+          <button class="chart-tf-btn" data-tf="4h" onclick="switchSignalTf('4h')">4H</button>
+          <button class="chart-tf-btn active" data-tf="1h" onclick="switchSignalTf('1h')">1H</button>
+          <button class="chart-tf-btn" data-tf="15m" onclick="switchSignalTf('15m')">15M</button>
+          <button class="chart-tf-btn" data-tf="5m" onclick="switchSignalTf('5m')">5M</button>
+        </div>
+        <div class="chart-wrapper" id="chartWrapper">
+          <div id="tvWidgetContainer" style="width: 100%; height: 100%;"></div>
+          <canvas id="signalCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></canvas>
+        </div>
+      </div>
+
+      <div id="visualElements" style="display: none;">
+        <div class="insights-grid" id="insightsGrid">
+          <div class="insight-item"><div class="insight-icon" id="trendIcon" style="color: var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div><div><div class="insight-label">Tendência</div><div class="insight-value" id="insightTrend">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" id="signalIcon" style="color: var(--blue);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div><div><div class="insight-label">Sinal</div><div class="insight-value" id="insightSignal">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" id="riskIcon" style="color: var(--orange);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><div><div class="insight-label">Risco</div><div class="insight-value" id="insightRisk">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" id="volumeIcon" style="color: var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><div><div class="insight-label">Volume</div><div class="insight-value" id="insightVolume">—</div></div></div>
+        </div>
+
+        <div class="trade-details" id="tradeDetails">
+          <div class="trade-detail"><div class="trade-detail-label">Entrada</div><div class="trade-detail-value" id="tradeEntry">—</div></div>
+          <div class="trade-detail"><div class="trade-detail-label">Stop Loss</div><div class="trade-detail-value" id="tradeStop" style="color: var(--red);">—</div></div>
+          <div class="trade-detail"><div class="trade-detail-label">Alvo</div><div class="trade-detail-value" id="tradeTarget" style="color: var(--green);">—</div></div>
+        </div>
+
+        <div class="rr-card" id="rrCard" style="display: none;">
+          <div class="rr-header">Risco / Retorno</div>
+          <div class="rr-bar-container">
+            <div class="rr-bar-risk" id="rrBarRisk" style="width: 33%"></div>
+            <div class="rr-bar-reward" id="rrBarReward" style="left: 33%; width: 67%"></div>
+          </div>
+          <div class="rr-labels">
+            <span class="rr-label-risk" id="rrLabelRisk">Risco: —</span>
+            <span class="rr-label-reward" id="rrLabelReward">Retorno: —</span>
+          </div>
+          <div class="rr-ratio" id="rrRatio">R:R —</div>
+        </div>
+
+        <div class="strategy-card" id="strategyCard">
+          <div class="strategy-header">
+            <div class="strategy-name">My Strategy › <span id="strategyDirection">—</span></div>
+            <div class="strategy-status" id="strategyStatus">—</div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Tipo: <span id="strategyType" style="color: var(--text-primary); font-weight: 600;">—</span></div>
+          <div class="strategy-bars" id="strategyBars">
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div class="asset-label" style="margin-bottom: 8px;">📋 Copiar para Binance</div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">TP Limit (USDT)</div><div class="copy-row-value" id="copyTp" style="color: var(--green);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('copyTp', this)">📋 Copiar</button>
+          </div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">SL Trigger (USDT)</div><div class="copy-row-value" id="copySlTrigger" style="color: var(--red);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('copySlTrigger', this)">📋 Copiar</button>
+          </div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">SL Limit (USDT)</div><div class="copy-row-value" id="copySlLimit" style="color: var(--red);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('copySlLimit', this)"> Copiar</button>
+          </div>
+        </div>
+
+        <button class="btn-secondary" onclick="saveCurrentAnalysis()" style="margin-top: 12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Salvar Análise
+        </button>
+
+        <button class="btn-secondary" onclick="redoAnalysis()" style="margin-top: 8px;" id="redoBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refazer Análise
+        </button>
+      </div>
+
+      <div class="card result-card">
+        <div class="result-content" id="resultContent">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            <div class="empty-state-title">A análise aparecerá aqui</div>
+            <div class="empty-state-sub">Selecione um ativo e clique em Analisar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pnlModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💰 PnL Realizado</div>
+      <button class="modal-close" onclick="closePnLModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="modal-section"><label class="modal-label">Capital (USDT)</label><input type="number" class="modal-input" id="capitalInput" value="12" step="0.01"></div>
+    <div class="modal-section"><label class="modal-label">Risco por Trade (%)</label><input type="number" class="modal-input" id="riskPercentInput" value="2" step="0.1" min="0.1" max="10"></div>
+    <div class="modal-section"><label class="modal-label">Taxa Maker Binance (%)</label><input type="number" class="modal-input" id="makerFeeInput" value="0.1" step="0.01"></div>
+    <div class="modal-section"><label class="modal-label">Taxa Taker Binance (%)</label><input type="number" class="modal-input" id="takerFeeInput" value="0.1" step="0.01"></div>
+    <button class="btn-calc" onclick="calculateTrade()">Calcular Trade</button>
+    <div class="calc-result" id="calcResult" style="display: none;">
+      <div class="calc-row"><span class="calc-label">Capital</span><span class="calc-value" id="calcCapital">—</span></div>
+      <div class="calc-row"><span class="calc-label">Risco (USDT)</span><span class="calc-value" id="calcRisk">—</span></div>
+      <div class="calc-row"><span class="calc-label">Alavancagem</span><span class="calc-value" id="calcLeverage">—</span></div>
+      <div class="calc-row"><span class="calc-label">Position Size</span><span class="calc-value" id="calcPosition">—</span></div>
+      <div class="calc-row"><span class="calc-label">Taxa Entrada</span><span class="calc-value negative" id="calcEntryFee">—</span></div>
+      <div class="calc-row"><span class="calc-label">Taxa Saída</span><span class="calc-value negative" id="calcExitFee">—</span></div>
+      <div class="calc-row"><span class="calc-label">Total Taxas</span><span class="calc-value negative" id="calcTotalFees">—</span></div>
+      <div class="calc-row" style="border-top: 1px solid #333; padding-top: 12px; margin-top: 4px;"><span class="calc-label">🟢 Lucro Bruto (WIN)</span><span class="calc-value positive" id="calcGrossWin">—</span></div>
+      <div class="calc-row"><span class="calc-label">Taxas WIN</span><span class="calc-value negative" id="calcFeesWin">—</span></div>
+      <div class="calc-row"><span class="calc-label"> Lucro Líquido (WIN)</span><span class="calc-value positive" id="calcWin">—</span></div>
+      <div class="calc-row"><span class="calc-label">Saldo após WIN</span><span class="calc-value positive" id="calcBalanceWin">—</span></div>
+      <div class="calc-row" style="border-top: 1px solid #333; padding-top: 12px; margin-top: 4px;"><span class="calc-label">🔴 Perda Bruta (LOSS)</span><span class="calc-value negative" id="calcGrossLoss">—</span></div>
+      <div class="calc-row"><span class="calc-label">Taxas LOSS</span><span class="calc-value negative" id="calcFeesLoss">—</span></div>
+      <div class="calc-row"><span class="calc-label">🔴 Perda Líquida (LOSS)</span><span class="calc-value negative" id="calcLoss">—</span></div>
+      <div class="calc-row"><span class="calc-label">Saldo após LOSS</span><span class="calc-value negative" id="calcBalanceLoss">—</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pageLinks">
+  <div class="container">
+    <div class="header">
+      <div class="logo"><div class="logo-icon">P</div><div class="logo-text">PRIME AI</div></div>
+    </div>
+    <div class="clock-display">
+      <div class="clock-time" id="clockTime">00:00:00</div>
+      <div class="clock-date" id="clockDate">Carregando...</div>
+    </div>
+    <div class="asset-label" style="margin-bottom: 12px;">Links Rápidos</div>
+    <div class="links-grid">
+      <a href="https://www.binance.com" target="_blank" class="link-card">
+        <div class="link-card-icon" style="background: rgba(240, 185, 11, 0.15); color: #f0b90b;">₿</div>
+        <div class="link-card-title">Binance</div>
+        <div class="link-card-desc">Abrir exchange</div>
+      </a>
+      <a href="https://www.tradingview.com" target="_blank" class="link-card">
+        <div class="link-card-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;"></div>
+        <div class="link-card-title">TradingView</div>
+        <div class="link-card-desc">Gráficos avançados</div>
+      </a>
+      <a href="https://www.coingecko.com" target="_blank" class="link-card">
+        <div class="link-card-icon" style="background: rgba(48, 209, 88, 0.15); color: var(--green);"></div>
+        <div class="link-card-title">CoinGecko</div>
+        <div class="link-card-desc">Preços e dados</div>
+      </a>
+      <a href="https://www.coindesk.com" target="_blank" class="link-card">
+        <div class="link-card-icon" style="background: rgba(191, 90, 242, 0.15); color: var(--purple);">📰</div>
+        <div class="link-card-title">CoinDesk</div>
+        <div class="link-card-desc">Notícias crypto</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="pageSaved">
+  <div class="container">
+    <div class="header">
+      <div class="logo"><div class="logo-icon">P</div><div class="logo-text">PRIME AI</div></div>
+    </div>
+    <h1 class="section-title"><span>Análises</span><span>Salvas</span></h1>
+    <div id="firebaseWarning" class="firebase-warning" style="display: none;">
+      ⚠️ Modo Experimental ativo - Dados salvos no navegador serão perdidos ao recarregar a página.
+    </div>
+    <div class="asset-section">
+      <div class="card" style="padding: 14px; margin-bottom: 16px;">
+        <div class="api-toggle" id="notesToggle" onclick="toggleNotesContent()">
+          <span class="api-toggle-text" style="font-size: 13px;">📝 Bloco de Notas</span>
+          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="api-content" id="notesContent">
+          <textarea class="notes-area" id="notesArea" placeholder="Suas anotações aqui..." style="margin-top: 8px;"></textarea>
+          <button class="btn-secondary" onclick="saveNotes()" style="margin-top: 8px;">💾 Salvar Notas</button>
+        </div>
+      </div>
+    </div>
+    <div id="savedAnalysesList"></div>
+    <div id="savedSetsList"></div>
+  </div>
+</div>
+
+<div class="page" id="pagePrints">
+  <div class="container">
+    <div class="prints-header">
+      <div class="logo" style="margin-bottom: 16px;"><div class="logo-icon" style="width: 30px; height: 30px; font-size: 14px;">P</div><div class="logo-text" style="font-size: 18px;">Prints Auto</div></div>
+      <div class="prints-title">Gerador de Gráficos</div>
+      <div class="prints-subtitle">Binance • Estilo TradingView</div>
+    </div>
+    <div class="asset-section">
+      <div class="asset-label">Ativo</div>
+      <div class="asset-selector">
+        <button class="asset-btn" id="printAssetBtn" onclick="togglePrintAssetDropdown()">
+          <div class="asset-btn-left"><div class="asset-icon" id="printSelectedIcon">₿</div><span id="printSelectedName">BTCUSDT</span></div>
+          <div class="asset-btn-right"><span>Selecionar</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+        </button>
+        <div class="asset-dropdown" id="printAssetDropdown"></div>
+      </div>
+    </div>
+    <div class="asset-section">
+      <div class="asset-label">Data e Hora Final do Gráfico</div>
+      <div style="display: flex; gap: 8px;">
+        <input type="datetime-local" class="date-input" id="printDate" style="flex: 1;">
+        <button class="btn-secondary" style="margin-top: 0; width: auto; padding: 10px 14px; font-size: 12px;" onclick="setPrintNow()">Agora</button>
+      </div>
+    </div>
+    <div class="action-section">
+      <button class="btn-primary" id="generateBtn" onclick="generatePrints()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <span id="generateBtnText">Gerar 4 Timeframes</span>
+      </button>
+      <button class="btn-secondary" id="downloadZipBtn" onclick="downloadAllZip()" style="display: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Baixar Tudo em ZIP</span>
+      </button>
+    </div>
+    <div class="print-preview-grid" id="printPreviewGrid"></div>
+  </div>
+</div>
+
+<div class="page" id="pageManual">
+  <div class="container">
+    <div class="header">
+      <div class="logo"><div class="logo-icon">P</div><div class="logo-text">PRIME AI</div></div>
+    </div>
+    <h1 class="section-title"><span>Análise</span><span>Manual</span></h1>
+    <div style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.6;">
+      Use esta página para analisar sem gastar requisições da API. Copie o prompt, analise por fora (Gemini, ChatGPT, etc), cole a resposta aqui e o site processa tudo.
+    </div>
+
+    <button class="btn-primary" onclick="copyFullPrompt()" style="margin-bottom: 8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      📋 Copiar Prompt Completo
+    </button>
+
+    <button class="btn-secondary" onclick="pasteAndProcess()" style="margin-top: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+      📋 Colar Resposta e Processar
+    </button>
+
+    <div class="asset-section" style="margin-top: 14px;">
+      <div class="asset-label">Ativo da Análise</div>
+      <div class="asset-selector">
+        <button class="asset-btn" id="manualAssetBtn" onclick="toggleManualAssetDropdown()">
+          <div class="asset-btn-left"><div class="asset-icon" id="manualSelectedIcon"></div><span id="manualSelectedName">BTCUSDT</span></div>
+          <div class="asset-btn-right"><span>Selecionar</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+        </button>
+        <div class="asset-dropdown" id="manualAssetDropdown"></div>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="card" style="padding: 14px;">
+        <div class="api-toggle" id="manualPromptToggle" onclick="toggleManualPromptContent()">
+          <span class="api-toggle-text" style="font-size: 13px;">✏️ Prompt Personalizado</span>
+          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="api-content" id="manualPromptContent">
+          <textarea class="api-input" id="manualCustomPrompt" rows="4" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="asset-label">Resposta da IA</div>
+      <textarea class="manual-analysis-area" id="manualResponse" placeholder="Cole aqui a resposta completa da IA (Gemini, ChatGPT, etc) que analisou suas prints. A IA deve ter preenchido a tabela [PRIME_TABLE] com os dados da análise."></textarea>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-primary" onclick="processManualAnalysis()" style="flex: 1; margin-top: 12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+        Processar Análise
+      </button>
+      <button class="btn-danger" onclick="clearManualResponse()" style="flex: 0.4; margin-top: 12px;">
+        🗑️ Limpar
+      </button>
+    </div>
+
+    <div id="manualResultSection" style="display: none; margin-top: 20px;">
+      <div class="chart-container" id="manualChartContainer">
+        <div class="chart-header">
+          <div class="chart-title">📊 Gráfico com Sinais</div>
+          <button class="chart-pnl-btn" onclick="openPnLModal()">💰 PnL Realizado</button>
+        </div>
+        <div class="chart-view-toggle">
+          <button class="chart-view-btn" id="manualViewTV" onclick="switchManualChartView('tv')">TradingView</button>
+          <button class="chart-view-btn highlight active" id="manualViewCustom" onclick="switchManualChartView('custom')">✨ Com Sinais</button>
+        </div>
+        <div class="chart-tf-label" id="manualSignalTfLabel">Timeframe: 1H</div>
+        <div class="chart-tf-selector">
+          <button class="chart-tf-btn" data-tf="4h" onclick="switchManualSignalTf('4h')">4H</button>
+          <button class="chart-tf-btn active" data-tf="1h" onclick="switchManualSignalTf('1h')">1H</button>
+          <button class="chart-tf-btn" data-tf="15m" onclick="switchManualSignalTf('15m')">15M</button>
+          <button class="chart-tf-btn" data-tf="5m" onclick="switchManualSignalTf('5m')">5M</button>
+        </div>
+        <div class="chart-wrapper" id="manualChartWrapper">
+          <div id="manualTvWidgetContainer" style="width: 100%; height: 100%;"></div>
+          <canvas id="manualSignalCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></canvas>
+        </div>
+      </div>
+
+      <div id="manualVisualElements">
+        <div class="insights-grid">
+          <div class="insight-item"><div class="insight-icon" style="color: var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg></div><div><div class="insight-label">Tendência</div><div class="insight-value" id="manualInsightTrend">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" style="color: var(--blue);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div><div><div class="insight-label">Sinal</div><div class="insight-value" id="manualInsightSignal">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" style="color: var(--orange);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><div><div class="insight-label">Risco</div><div class="insight-value" id="manualInsightRisk">—</div></div></div>
+          <div class="insight-item"><div class="insight-icon" style="color: var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><div><div class="insight-label">Volume</div><div class="insight-value" id="manualInsightVolume">—</div></div></div>
+        </div>
+
+        <div class="trade-details">
+          <div class="trade-detail"><div class="trade-detail-label">Entrada</div><div class="trade-detail-value" id="manualTradeEntry">—</div></div>
+          <div class="trade-detail"><div class="trade-detail-label">Stop Loss</div><div class="trade-detail-value" id="manualTradeStop" style="color: var(--red);">—</div></div>
+          <div class="trade-detail"><div class="trade-detail-label">Alvo</div><div class="trade-detail-value" id="manualTradeTarget" style="color: var(--green);">—</div></div>
+        </div>
+
+        <div class="rr-card" id="manualRrCard" style="display: none;">
+          <div class="rr-header">Risco / Retorno</div>
+          <div class="rr-bar-container">
+            <div class="rr-bar-risk" id="manualRrBarRisk" style="width: 33%"></div>
+            <div class="rr-bar-reward" id="manualRrBarReward" style="left: 33%; width: 67%"></div>
+          </div>
+          <div class="rr-labels">
+            <span class="rr-label-risk" id="manualRrLabelRisk">Risco: —</span>
+            <span class="rr-label-reward" id="manualRrLabelReward">Retorno: —</span>
+          </div>
+          <div class="rr-ratio" id="manualRrRatio">R:R —</div>
+        </div>
+
+        <div class="strategy-card">
+          <div class="strategy-header">
+            <div class="strategy-name">My Strategy › <span id="manualStrategyDirection">—</span></div>
+            <div class="strategy-status" id="manualStrategyStatus">—</div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Tipo: <span id="manualStrategyType" style="color: var(--text-primary); font-weight: 600;">—</span></div>
+          <div class="strategy-bars" id="manualStrategyBars">
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+            <div class="strategy-bar"><div class="strategy-bar-fill green" style="width: 0%"></div></div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div class="asset-label" style="margin-bottom: 8px;">📋 Copiar para Binance</div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">TP Limit (USDT)</div><div class="copy-row-value" id="manualCopyTp" style="color: var(--green);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopyTp', this)">📋 Copiar</button>
+          </div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">SL Trigger (USDT)</div><div class="copy-row-value" id="manualCopySlTrigger" style="color: var(--red);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopySlTrigger', this)">📋 Copiar</button>
+          </div>
+          <div class="copy-row">
+            <div><div class="copy-row-label">SL Limit (USDT)</div><div class="copy-row-value" id="manualCopySlLimit" style="color: var(--red);">—</div></div>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopySlLimit', this)">📋 Copiar</button>
+          </div>
+        </div>
+
+        <button class="btn-secondary" onclick="saveManualAnalysis()" style="margin-top: 12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Salvar Análise (Externa)
+        </button>
+
+        <button class="btn-secondary" onclick="showManualResultChart()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          📊 Ver Resultado (2 dias depois)
+        </button>
+
+        <button class="btn-telegram" onclick="sendToTelegram()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+          📤 Enviar Sinal para o Telegram
+        </button>
+
+        <a href="https://t.me/PrimeTechAI" target="_blank" class="btn-telegram" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+           Abrir Canal do Telegram
+        </a>
+
+        <button class="btn-secondary" onclick="openAddAnalysisPopup()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          ➕ Adicionar Análise
+        </button>
+
+        <button class="btn-secondary" onclick="joinResponses()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+          📊 Juntar Respostas
+        </button>
+
+        <button class="btn-danger" onclick="closeAllAnalyses()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          ❌ Fechar Análises
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Otimizador de Prompt Page -->
+<div class="page" id="pageOptimizer">
+  <div class="container">
+    <div class="header">
+      <div class="logo"><div class="logo-icon">P</div><div class="logo-text">PRIME AI</div></div>
+    </div>
+    <h1 class="section-title"><span>Otimizador</span><span>de Prompt</span></h1>
+
+    <div class="asset-section">
+      <div class="asset-label">Ativo</div>
+      <div class="asset-selector">
+        <button class="asset-btn" id="optAssetBtn" onclick="toggleOptAssetDropdown()">
+          <div class="asset-btn-left"><div class="asset-icon" id="optSelectedIcon"></div><span id="optSelectedName">BTCUSDT</span></div>
+          <div class="asset-btn-right"><span>Selecionar</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></div>
+        </button>
+        <div class="asset-dropdown" id="optAssetDropdown"></div>
+      </div>
+    </div>
+
+    <div class="asset-section">
+      <div class="asset-label">Data de Início</div>
+      <input type="date" class="date-input" id="optStartDate" style="width: 100%;">
+    </div>
+
+    <div class="asset-section">
+      <div class="asset-label">Data de Fim</div>
+      <input type="date" class="date-input" id="optEndDate" style="width: 100%;">
+    </div>
+
+    <button class="btn-primary" onclick="startOptimizerGeneration()" id="optGenerateBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+      Gerar Gráficos
+    </button>
+
+    <div id="optProgressContainer" style="display: none; margin-top: 16px;">
+      <div class="progress-container">
+        <div class="progress-bar" id="optProgressBar" style="width: 0%"></div>
+      </div>
+      <div class="progress-text" id="optProgressText">0%</div>
+    </div>
+
+    <button class="btn-secondary" id="optDownloadBtn" onclick="downloadOptimizerCharts()" style="display: none; margin-top: 12px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Baixar Gráficos
+    </button>
+
+    <div id="optPromptSection" style="display: none; margin-top: 20px;">
+      <div class="card" style="padding: 14px; margin-bottom: 16px;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;"> Prompt para copiar</div>
+        <button class="btn-secondary" onclick="copyOptimizerPrompt()" style="margin-bottom: 8px;">📋 Copiar Prompt</button>
+        <div class="api-toggle" id="optPromptToggle" onclick="toggleOptPromptContent()">
+          <span class="api-toggle-text" style="font-size: 13px;">✏️ Prompt Personalizado</span>
+          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="api-content" id="optPromptContent">
+          <textarea class="api-input" id="optCustomPrompt" rows="4" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
+        </div>
+      </div>
+
+      <div class="optimizer-list" id="optimizerList"></div>
+
+      <button class="btn-primary" id="optWinRateAllBtn" onclick="analyzeAllWinLoss()" style="display: none; margin-top: 16px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+        Win/Loss? All
+      </button>
+
+      <div id="optWinRateAllProgress" style="display: none; margin-top: 12px;">
+        <div class="progress-container">
+          <div class="progress-bar" id="optWinRateProgressBar" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="optWinRateProgressText">Verificando...</div>
+      </div>
+
+      <button class="btn-primary" id="optWinRateBtn" onclick="analyzeWinRate()" style="display: none; margin-top: 16px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+        Analisar Win Rate
+      </button>
+
+      <div id="optWinRateResult" style="display: none; margin-top: 16px;">
+        <div class="card" style="padding: 14px;">
+          <div class="result-content" id="optWinRateText"></div>
+          <button class="btn-secondary" onclick="copyWinRateResult()" style="margin-top: 12px;">📋 Copiar Resultado + Prompt</button>
+        </div>
+      </div>
+
+      <button class="btn-secondary" onclick="saveOptimizerSet()" style="margin-top: 12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        💾 Salvar Lista de Análises
+      </button>
+
+      <button class="btn-danger" onclick="clearOptimizerPage()" style="margin-top: 12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        ❌ Limpar Página
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating analysis button -->
+<button class="floating-analysis-btn" id="floatingAnalysisBtn" onclick="toggleFloatingAnalysis()">1</button>
+
+<!-- Add Analysis Popup -->
+<div class="modal-overlay" id="addAnalysisPopup">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <div class="modal-title">➕ Adicionar Nova Análise</div>
+      <button class="modal-close" onclick="closeAddAnalysisPopup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Cole a resposta da IA abaixo para adicionar mais uma análise comparativa.</div>
+    <button class="btn-secondary" onclick="copyFullPrompt()" style="margin-bottom: 8px;">📋 Copiar Prompt</button>
+    <button class="btn-secondary" onclick="pasteInPopup()" style="margin-top: 8px;">📋 Colar da Área de Transferência</button>
+    <textarea class="manual-analysis-area" id="popupResponse" placeholder="Cole a resposta da IA aqui..." style="margin-top: 12px; min-height: 200px;"></textarea>
+    <button class="btn-primary" onclick="processPopupAnalysis()" style="margin-top: 12px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+      Processar Análise
+    </button>
+  </div>
+</div>
+
+<!-- Join Responses Modal -->
+<div class="modal-overlay" id="joinResponsesModal">
+  <div class="modal" style="max-width: 600px; max-height: 85vh;">
+    <div class="modal-header">
+      <div class="modal-title">📊 Comparação de Análises</div>
+      <button class="modal-close" onclick="closeJoinResponses()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div id="joinResponsesContent"></div>
+  </div>
+</div>
+
+<!-- Result Modal (shared) -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal" style="max-width: 700px; max-height: 90vh;">
+    <div class="modal-header">
+      <div class="modal-title" id="resultModalTitle">📊 Resultado</div>
+      <button class="modal-close" onclick="closeResultModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div id="resultModalContent"></div>
+  </div>
+</div>
+
+<div class="analysis-timer" id="analysisTimer">
+  <div class="spinner"></div>
+  <span>Processando: <span id="analysisTimerValue">0s</span></span>
+</div>
+
+<div class="rate-limit-timer" id="rateLimitTimer">
+  ⏳ API limitada. Tente novamente em <span id="rateLimitValue">0</span>s
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-inner">
+    <div class="nav-item active" data-page="pageAnalysis" onclick="switchPage('pageAnalysis', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </div>
+    <div class="nav-item" data-page="pageManual" onclick="switchPage('pageManual', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+    </div>
+    <div class="nav-item" data-page="pageOptimizer" onclick="switchPage('pageOptimizer', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+    </div>
+    <div class="nav-item" data-page="pageLinks" onclick="switchPage('pageLinks', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </div>
+    <div class="nav-item" data-page="pageSaved" onclick="switchPage('pageSaved', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+    </div>
+    <div class="nav-item" data-page="pagePrints" onclick="switchPage('pagePrints', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
