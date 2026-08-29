@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.junyk2.twa",
+        "sha256_cert_fingerprints": ["C6:8B:8F:6B:A5:5E:C7:F1:C8:A4:B3:A3:73:03:A5:16:41:45:A7:01:D2:F0:42:A5:A1:2C:1A:DC:B4:A3:CE:2B"]
+      }
+    }]
