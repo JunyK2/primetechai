@@ -22,7 +22,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 
 .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px 28px; }
 .logo { display: flex; align-items: center; gap: 10px; }
-.logo-icon { width: 34px; height: 34px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 17px; color: #000; }
+.logo-img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; }
 .logo-text { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; }
 .header-actions { display: flex; gap: 8px; }
 .icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--card-bg); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; color: var(--text-primary); }
@@ -168,6 +168,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 .method-badge.manual { background: rgba(10, 132, 255, 0.15); color: var(--blue); }
 .method-badge.binance { background: rgba(255, 159, 10, 0.15); color: var(--orange); }
 .method-badge.external { background: rgba(191, 90, 242, 0.15); color: var(--purple); }
+.method-badge.signal { background: rgba(48, 209, 88, 0.15); color: var(--green); }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-tertiary); }
 .empty-state svg { width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.4; }
@@ -286,6 +287,16 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 }
 .floating-analysis-btn.visible { display: flex; }
 
+#floatingSignalBtn {
+  position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px;
+  border-radius: 50%; background: var(--blue); color: #fff;
+  font-weight: 800; font-size: 20px; display: none;
+  align-items: center; justify-content: center; cursor: pointer; z-index: 90;
+  box-shadow: 0 4px 20px rgba(10, 132, 255, 0.4);
+  animation: floatPulse 2s ease-in-out infinite; border: none; font-family: inherit;
+}
+#floatingSignalBtn.visible { display: flex; }
+
 .comparison-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
 .comparison-table th, .comparison-table td { padding: 8px; border: 1px solid var(--card-border); text-align: center; }
 .comparison-table th { background: #1a1a1a; color: var(--text-secondary); font-weight: 600; }
@@ -339,7 +350,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
   animation: spin 0.8s linear infinite;
 }
 
-#chartLoadingText {
+#chartLoadingText, #groqLoadingText {
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
