@@ -279,85 +279,90 @@ function calculateNiceScale(min, max, numTicks = 8) {
   return { min: niceMin, max: niceMax, tickSpacing };
 }
 
-function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = null, analysisTimestamp = null) {
+// ============================================================
+// NOVO GERADOR DE GRÁFICOS (Com Fuso Horário Local Corrigido)
+// ============================================================
+function drawTradingViewChart(klines, symbol, interval, endTimeDate) {
   const canvas = document.createElement('canvas');
   const dpr = window.devicePixelRatio || 1;
   const width = 800;
   const height = 600;
+  
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
+  
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-
+  
   const bgColor = '#000000';
   const gridColor = '#1a1a1a';
   const textColor = '#d1d4dc';
   const textMuted = '#787b86';
   const upColor = '#26a69a';
   const downColor = '#ef5350';
-
+  
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, width, height);
-
+  
   const candles = klines.map(k => ({
     time: k[0], open: parseFloat(k[1]), high: parseFloat(k[2]),
     low: parseFloat(k[3]), close: parseFloat(k[4]), volume: parseFloat(k[5])
   }));
-
+  
   const prices = candles.flatMap(c => [c.high, c.low]);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
-
+  
   const scale = calculateNiceScale(minPrice, maxPrice, 8);
   const yMin = scale.min;
   const yMax = scale.max;
   const tickSpacing = scale.tickSpacing;
-
+  
   const rightPaddingCandles = 4;
   const chartLeft = 10;
   const chartRight = width - 80;
   const chartTop = 60;
   const chartBottom = height - 120;
-
+  
   const totalSlots = candles.length + rightPaddingCandles;
   const chartWidth = chartRight - chartLeft;
   const spacing = chartWidth / totalSlots;
   const candleWidth = Math.max(2, spacing * 0.7);
   const chartHeight = chartBottom - chartTop;
-
+  
   function priceToY(price) {
     return chartTop + chartHeight * (1 - (price - yMin) / (yMax - yMin));
   }
-
+  
   function indexToX(i) {
     return chartLeft + spacing * i + spacing / 2;
   }
-
+  
   const lastCandle = candles[candles.length - 1];
   const prevCandle = candles.length >= 2 ? candles[candles.length - 2] : lastCandle;
   const isLastGreen = lastCandle.close >= lastCandle.open;
   const ohlcColor = isLastGreen ? upColor : downColor;
-
+  
   ctx.fillStyle = textColor;
   ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'left';
   const symbolName = symbol.replace('USDT', ' / USDT');
   ctx.fillText(`${symbolName} · ${interval.toUpperCase()}`, chartLeft, 25);
-
+  
   const priceChange = lastCandle.close - prevCandle.close;
   const percentChange = (priceChange / prevCandle.close) * 100;
   const changeColor = priceChange >= 0 ? upColor : downColor;
   const changeSign = priceChange >= 0 ? '+' : '';
-
+  
   ctx.fillStyle = changeColor;
   ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.fillText(`${changeSign}${priceChange.toFixed(2)} (${changeSign}${percentChange.toFixed(2)}%)`, chartLeft + 200, 25);
-
+  
   ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
   const ohlcStart = 380;
-
+  
   ctx.fillStyle = textMuted; ctx.fillText('O', ohlcStart, 25);
   ctx.fillStyle = ohlcColor; ctx.fillText(formatPrice(lastCandle.open), ohlcStart + 12, 25);
   ctx.fillStyle = textMuted; ctx.fillText('H', ohlcStart + 80, 25);
@@ -366,11 +371,11 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
   ctx.fillStyle = ohlcColor; ctx.fillText(formatPrice(lastCandle.low), ohlcStart + 172, 25);
   ctx.fillStyle = textMuted; ctx.fillText('C', ohlcStart + 240, 25);
   ctx.fillStyle = ohlcColor; ctx.fillText(formatPrice(lastCandle.close), ohlcStart + 252, 25);
-
+  
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
   ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
-
+  
   for (let price = yMin; price <= yMax; price += tickSpacing) {
     const y = priceToY(price);
     ctx.beginPath();
@@ -381,40 +386,14 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
     ctx.textAlign = 'left';
     ctx.fillText(formatPrice(price), chartRight + 8, y + 4);
   }
-
+  
   const timeLabels = [];
-
-  candles.forEach((c, i) => {
-    const date = new Date(c.time);
-    const utcHours = date.getUTCHours();
-    const utcMinutes = date.getUTCMinutes();
-
-    let shouldMark = false;
-    let label = '';
-
-    if (interval === '4h') {
-      if (utcHours === 0 && utcMinutes === 0) { shouldMark = true; label = String(date.getUTCDate()); }
-    } else if (interval === '1h') {
-      if (utcMinutes === 0 && utcHours % 6 === 0) {
-        shouldMark = true;
-        if (utcHours === 0) { label = String(date.getUTCDate()); }
-        else { label = `${String(utcHours).padStart(2, '0')}:00`; }
-      }
-    } else if (interval === '15m') {
-      if (utcMinutes === 0 && utcHours % 3 === 0) {
-        shouldMark = true;
-        if (utcHours === 0) { label = String(date.getUTCDate()); }
-        else { label = `${String(utcHours).padStart(2, '0')}:00`; }
-      }
-    } else if (interval === '5m') {
-      if (utcMinutes === 0) {
-        shouldMark = true;
-        if (utcHours === 0) { label = String(date.getUTCDate()); }
-        else { label = `${String(utcHours).padStart(2, '0')}:00`; }
-      }
-    }
-
-    if (shouldMark) {
+  
+  // CORREÇÃO PARA 4H: Marcar a cada 6 candles (24 horas = 1 dia)
+  if (interval === '4h') {
+    const startOffset = 6 - (candles.length % 6);
+    for (let i = startOffset; i < candles.length; i += 6) {
+      const date = new Date(candles[i].time);
       const x = indexToX(i);
       ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1;
@@ -422,35 +401,72 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
       ctx.moveTo(x, chartTop);
       ctx.lineTo(x, chartBottom);
       ctx.stroke();
-      timeLabels.push({ x, label });
+      timeLabels.push({ x, label: String(date.getDate()) });
     }
-  });
-
+  } else {
+    candles.forEach((c, i) => {
+      const date = new Date(c.time);
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      
+      let shouldMark = false;
+      let label = '';
+      
+      if (interval === '1h') {
+        if (minutes === 0 && hours % 6 === 0) {
+          shouldMark = true;
+          label = hours === 0 ? String(date.getDate()) : `${String(hours).padStart(2, '0')}:00`;
+        }
+      } else if (interval === '15m') {
+        if (minutes === 0 && hours % 3 === 0) {
+          shouldMark = true;
+          label = hours === 0 ? String(date.getDate()) : `${String(hours).padStart(2, '0')}:00`;
+        }
+      } else if (interval === '5m') {
+        if (minutes === 0) {
+          shouldMark = true;
+          label = hours === 0 ? String(date.getDate()) : `${String(hours).padStart(2, '0')}:00`;
+        }
+      }
+      
+      if (shouldMark) {
+        const x = indexToX(i);
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, chartTop);
+        ctx.lineTo(x, chartBottom);
+        ctx.stroke();
+        timeLabels.push({ x, label });
+      }
+    });
+  }
+  
   candles.forEach((c, i) => {
     const x = indexToX(i);
     const isGreen = c.close >= c.open;
     const color = isGreen ? upColor : downColor;
     const centerX = x;
     const halfWidth = candleWidth / 2;
-
+    
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(centerX, priceToY(c.high));
     ctx.lineTo(centerX, priceToY(c.low));
     ctx.stroke();
-
+    
     const bodyTop = priceToY(Math.max(c.open, c.close));
     const bodyBottom = priceToY(Math.min(c.open, c.close));
     const bodyHeight = Math.max(1, bodyBottom - bodyTop);
-
+    
     ctx.fillStyle = color;
     ctx.fillRect(centerX - halfWidth, bodyTop, candleWidth, bodyHeight);
   });
-
+  
   const lastPrice = lastCandle.close;
   const lastY = priceToY(lastPrice);
-
+  
   ctx.strokeStyle = isLastGreen ? upColor : downColor;
   ctx.lineWidth = 1;
   ctx.setLineDash([3, 3]);
@@ -459,26 +475,26 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
   ctx.lineTo(chartRight, lastY);
   ctx.stroke();
   ctx.setLineDash([]);
-
+  
   ctx.fillStyle = isLastGreen ? upColor : downColor;
   ctx.fillRect(chartRight, lastY - 10, 78, 20);
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(formatPrice(lastPrice), chartRight + 4, lastY + 4);
-
+  
   const volumes = candles.map(c => c.volume);
   const sma9 = calculateSMA(volumes, 9);
   const maxVol = Math.max(...volumes);
   const volHeight = 50;
   const volTop = chartBottom + 10;
-
+  
   ctx.fillStyle = textMuted;
   ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'left';
   const baseSymbol = symbol.replace('USDT', '');
   ctx.fillText(`Volume · ${baseSymbol} SMA 9  ${formatVolume(lastCandle.volume)}`, chartLeft, volTop - 2);
-
+  
   candles.forEach((c, i) => {
     const x = indexToX(i);
     const isGreen = c.close >= c.open;
@@ -488,7 +504,7 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
     ctx.fillStyle = isGreen ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)';
     ctx.fillRect(centerX - halfWidth, volTop + volHeight - barHeight, candleWidth, barHeight);
   });
-
+  
   ctx.strokeStyle = '#f0b90b';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -502,70 +518,13 @@ function drawTradingViewChart(klines, symbol, interval, endTimeDate, signals = n
     }
   });
   ctx.stroke();
-
+  
   const labelY = volTop + volHeight + 18;
   ctx.fillStyle = textMuted;
   ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'center';
   timeLabels.forEach(tl => { ctx.fillText(tl.label, tl.x, labelY); });
-
-  if (analysisTimestamp) {
-    const analysisTime = new Date(analysisTimestamp).getTime();
-    let closestIdx = -1;
-    let closestDiff = Infinity;
-    candles.forEach((c, i) => {
-      const diff = Math.abs(c.time - analysisTime);
-      if (diff < closestDiff) { closestDiff = diff; closestIdx = i; }
-    });
-    if (closestIdx >= 0) {
-      const x = indexToX(closestIdx);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(x, chartTop);
-      ctx.lineTo(x, chartBottom);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('ANÁLISE', x, chartTop - 5);
-    }
-  }
-
-  if (signals) {
-    const { entry, stop, target } = signals;
-    if (entry) {
-      const entryY = priceToY(entry);
-      ctx.strokeStyle = '#0a84ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(chartLeft, entryY); ctx.lineTo(chartRight + 78, entryY); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#0a84ff'; ctx.fillRect(chartRight, entryY - 10, 78, 20);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(`ENT ${formatPrice(entry)}`, chartRight + 4, entryY + 4);
-    }
-    if (stop) {
-      const stopY = priceToY(stop);
-      ctx.strokeStyle = '#ff453a'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(chartLeft, stopY); ctx.lineTo(chartRight + 78, stopY); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#ff453a'; ctx.fillRect(chartRight, stopY - 10, 78, 20);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`SL ${formatPrice(stop)}`, chartRight + 4, stopY + 4);
-    }
-    if (target) {
-      const targetY = priceToY(target);
-      ctx.strokeStyle = '#30d158'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-      ctx.beginPath(); ctx.moveTo(chartLeft, targetY); ctx.lineTo(chartRight + 78, targetY); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#30d158'; ctx.fillRect(chartRight, targetY - 10, 78, 20);
-      ctx.fillStyle = '#000'; ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`TP ${formatPrice(target)}`, chartRight + 4, targetY + 4);
-    }
-  }
-
+  
   return canvas;
 }
 
@@ -819,6 +778,9 @@ function renderUploadedImages() {
 }
 function removeUploadedImage(idx) { uploadedImages.splice(idx, 1); renderUploadedImages(); if (uploadedImages.length === 0) document.getElementById('uploadSection').style.display = 'none'; }
 
+// ============================================================
+// PROMPT ATUALIZADO: Proíbe vírgulas/pontos de milhar
+// ============================================================
 const VISUAL_TABLE_PROMPT = `
 
 ========================================================
@@ -836,9 +798,9 @@ Após toda a sua análise, você DEVE gerar um bloco JSON estruturado entre as t
   "risk": "Baixo|Médio|Alto",
   "volume": "Baixo|Médio|Alto",
   "direction": "LONG|SHORT|NO TRADE",
-  "entry": "preço ou faixa",
-  "stop_loss": "preço",
-  "target": "preço do TP principal",
+  "entry": "numero sem pontos ou virgulas (ex: 65000.50)",
+  "stop_loss": "numero sem pontos ou virgulas (ex: 64000.00)",
+  "target": "numero sem pontos ou virgulas (ex: 68000.00)",
   "risk_reward": "1:X (ex: 1:2.5)",
   "entry_type": "IMEDIATA|PULLBACK|CONFIRMAÇÃO",
   "confidence": "BAIXA|MÉDIA|ALTA",
@@ -856,6 +818,7 @@ REGRAS DA TABELA:
 - strategy_bars: array com 4 números de 0 a 100
 - analysis_date: data das imagens/gráficos analisados no formato DD/MM/YYYY (ex: 22/08/2026)
 - analysis_time: horário aproximado das imagens no formato HH:MM (pode arredondar os minutos, mas o dia e hora devem estar corretos)
+- entry, stop_loss e target DEVEM ser apenas números com ponto decimal (ex: 65000.50). NUNCA use vírgulas ou pontos para separar milhares (ex: NÃO use 65.000,50 ou 65,000.50).
 - Todos os campos de texto devem ser curtos (máximo 20 caracteres cada)
 - Preencha com base na sua análise real
 - Este bloco é OBRIGATÓRIO e deve vir no FINAL da resposta`;
@@ -1598,16 +1561,29 @@ function extractVisualsFromText(text) {
   if (riskMatch && riskEl) { const r = riskMatch[1].toUpperCase(); riskEl.textContent = r; riskEl.style.color = r === 'BAIXO' ? 'var(--green)' : r === 'MÉDIO' ? 'var(--orange)' : 'var(--red)'; }
 }
 
+// ============================================================
+// FUNÇÕES DE GERAÇÃO DE GRÁFICOS COM LOADING OVERLAY
+// ============================================================
 async function generatePrints() {
   if (isGenerating) return;
-  const btn = document.getElementById('generateBtn'); const btnText = document.getElementById('generateBtnText');
+  const btn = document.getElementById('generateBtn');
+  const btnText = document.getElementById('generateBtnText');
+  const loading = document.getElementById('chartLoading');
+  const loadingText = document.getElementById('chartLoadingText');
+  
   btn.disabled = true; btnText.textContent = 'Gerando...'; isGenerating = true; generatedPrints = {};
   const printDate = document.getElementById('printDate').value;
   const tfs = ['4h','1h','15m','5m'];
   const grid = document.getElementById('printPreviewGrid'); grid.innerHTML = '';
+  
+  loading.classList.add('active');
+  
   try {
     for (let i = 0; i < tfs.length; i++) {
       const tf = tfs[i];
+      loadingText.textContent = `Gerando gráfico ${tf.toUpperCase()}...`;
+      await new Promise(r => setTimeout(r, 100));
+      
       const result = await getChartFromBinance(printAsset, tf, printDate);
       generatedPrints[tf] = result.chart;
       const dateObj = printDate ? new Date(printDate) : new Date();
@@ -1617,10 +1593,17 @@ async function generatePrints() {
       grid.innerHTML += `<div class="print-preview"><img src="${result.chart}" alt="${tf}"><div class="print-preview-label">${tf.toUpperCase()}</div><button class="print-preview-download" onclick="downloadPrint('${tf}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button></div>`;
     }
     document.getElementById('downloadZipBtn').style.display = 'flex';
+    loadingText.textContent = 'Concluído!';
+    setTimeout(() => loading.classList.remove('active'), 500);
     showToast('Gráficos gerados com sucesso!', 'success');
-  } catch (err) { showToast(`Erro: ${err.message}`, 'error'); }
-  finally { isGenerating = false; btn.disabled = false; btnText.textContent = 'Gerar 4 Timeframes'; }
+  } catch (err) {
+    showToast(`Erro: ${err.message}`, 'error');
+    loading.classList.remove('active');
+  } finally {
+    isGenerating = false; btn.disabled = false; btnText.textContent = 'Gerar 4 Timeframes';
+  }
 }
+
 function downloadPrint(tf, filename) { if (!generatedPrints[tf]) return; const link = document.createElement('a'); link.href = generatedPrints[tf]; link.download = filename; link.click(); }
 async function downloadAllZip() {
   if (Object.keys(generatedPrints).length === 0) return;
@@ -2060,6 +2043,9 @@ async function sendToTelegram() {
   } catch (err) { showToast(`Erro: ${err.message}`, 'error'); }
 }
 
+// ============================================================
+// OTIMIZADOR DE PROMPT (COM LOADING OVERLAY)
+// ============================================================
 async function startOptimizerGeneration() {
   if (optimizerIsGenerating) return;
   const startDate = document.getElementById('optStartDate').value;
@@ -2073,6 +2059,10 @@ async function startOptimizerGeneration() {
   document.getElementById('optProgressContainer').style.display = 'block';
   document.getElementById('optDownloadBtn').style.display = 'none';
   document.getElementById('optPromptSection').style.display = 'none';
+  
+  const loading = document.getElementById('chartLoading');
+  const loadingText = document.getElementById('chartLoadingText');
+  loading.classList.add('active');
   
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -2113,6 +2103,7 @@ async function startOptimizerGeneration() {
     optimizerCharts.push({ type: 'label', label: dateStr, data: labelImage, date: task.date, hour: task.hour });
     completed++;
     updateOptimizerProgress(completed, total * 5);
+    loadingText.textContent = `Gerando gráficos... ${Math.round((completed / (total * 5)) * 100)}%`;
     
     const brasiliaTime = new Date(task.date);
     brasiliaTime.setHours(task.hour, 0, 0, 0);
@@ -2127,6 +2118,7 @@ async function startOptimizerGeneration() {
       } catch (err) { console.error(`Erro ao gerar ${tf} para ${dateStr}:`, err); }
       completed++;
       updateOptimizerProgress(completed, total * 5);
+      loadingText.textContent = `Gerando gráficos... ${Math.round((completed / (total * 5)) * 100)}%`;
       await sleep(50);
     }
   }
@@ -2141,6 +2133,8 @@ async function startOptimizerGeneration() {
   document.getElementById('optDownloadBtn').style.display = 'flex';
   document.getElementById('optPromptSection').style.display = 'block';
   renderOptimizerList();
+  loadingText.textContent = 'Concluído!';
+  setTimeout(() => loading.classList.remove('active'), 500);
   showToast(`✅ Geração concluída! ${total} conjuntos gerados.`, 'success');
 }
 
