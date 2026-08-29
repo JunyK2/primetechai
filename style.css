@@ -30,7 +30,7 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .icon-btn svg { width: 16px; height: 16px; }
 
 .section-title { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 22px; text-align: center; }
-.section-title span { display: block; }
+.section-title span { display: inline; }
 .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 18px; transition: border-color 0.2s ease; }
 .card:hover { border-color: var(--card-border-hover); }
 
@@ -57,7 +57,7 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .api-toggle-arrow { transition: transform 0.2s ease; color: var(--text-secondary); }
 .api-toggle.open .api-toggle-arrow { transform: rotate(180deg); }
 .api-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-.api-content.open { max-height: 800px; }
+.api-content.open { max-height: 1200px; }
 .api-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .api-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); min-width: 80px; }
 .api-input { flex: 1; padding: 10px 12px; background: #0a0a0a; border: 1px solid var(--card-border); border-radius: 10px; color: var(--text-primary); font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s ease; }
@@ -96,8 +96,6 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .btn-secondary:hover { border-color: var(--card-border-hover); background: var(--card-bg-2); }
 .btn-danger { width: 100%; padding: 14px; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.3); border-radius: 18px; color: var(--red); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
 .btn-danger:hover { background: rgba(255, 69, 58, 0.25); }
-.btn-telegram { width: 100%; padding: 14px; background: rgba(10, 132, 255, 0.15); border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 18px; color: var(--blue); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; text-decoration: none; }
-.btn-telegram:hover { background: rgba(10, 132, 255, 0.25); }
 
 .result-section { margin-top: 16px; }
 .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 0 4px; }
@@ -235,10 +233,6 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .rate-limit-timer { position: fixed; top: 70px; right: 20px; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.4); border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--red); z-index: 100; display: none; }
 .rate-limit-timer.active { display: block; }
 
-.clock-display { text-align: center; padding: 30px 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; margin-bottom: 20px; }
-.clock-time { font-size: 48px; font-weight: 700; letter-spacing: -2px; margin-bottom: 8px; }
-.clock-date { font-size: 14px; color: var(--text-secondary); }
-
 .saved-analysis-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .saved-analysis-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .saved-analysis-asset { font-size: 16px; font-weight: 700; }
@@ -273,22 +267,18 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .floating-analysis-btn {
   position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px;
   border-radius: 50%; background: var(--green); color: #000;
-  font-weight: 800; font-size: 20px; display: none;
+  font-weight: 800; font-size: 20px;
   align-items: center; justify-content: center; cursor: pointer; z-index: 90;
   box-shadow: 0 4px 20px rgba(48, 209, 88, 0.4);
   animation: floatPulse 2s ease-in-out infinite; border: none; font-family: inherit;
+  display: none;
 }
 .floating-analysis-btn.visible { display: flex; }
 
 #floatingSignalBtn {
-  position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px;
-  border-radius: 50%; background: var(--blue); color: #fff;
-  font-weight: 800; font-size: 20px; display: none;
-  align-items: center; justify-content: center; cursor: pointer; z-index: 90;
+  background: var(--blue); color: #fff;
   box-shadow: 0 4px 20px rgba(10, 132, 255, 0.4);
-  animation: floatPulse 2s ease-in-out infinite; border: none; font-family: inherit;
 }
-#floatingSignalBtn.visible { display: flex; }
 
 .comparison-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
 .comparison-table th, .comparison-table td { padding: 8px; border: 1px solid var(--card-border); text-align: center; }
@@ -318,7 +308,6 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
 .saved-set-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
 .saved-set-card:hover { border-color: var(--card-border-hover); }
 
-/* Loading Overlay */
 .loading-overlay {
   display: none;
   position: fixed;
@@ -347,7 +336,6 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 500;
 }
 
-/* Spinner no modal de Join Responses */
 #joinResponsesSpinner {
   display: none;
   position: absolute;
