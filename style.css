@@ -10,7 +10,7 @@
   --green: #30d158; --red: #ff453a; --orange: #ff9f0a;
   --purple: #bf5af2; --blue: #0a84ff;
 }
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; line-height: 1.4; }
+body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; line-height: 1.4; }
 .container { max-width: 480px; margin: 0 auto; padding: 20px 20px 100px; }
 .page { display: none; }
 .page.active { display: block; animation: fadeIn 0.25s ease; }
@@ -57,7 +57,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 .api-toggle-arrow { transition: transform 0.2s ease; color: var(--text-secondary); }
 .api-toggle.open .api-toggle-arrow { transform: rotate(180deg); }
 .api-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-.api-content.open { max-height: 600px; }
+.api-content.open { max-height: 800px; }
 .api-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .api-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); min-width: 80px; }
 .api-input { flex: 1; padding: 10px 12px; background: #0a0a0a; border: 1px solid var(--card-border); border-radius: 10px; color: var(--text-primary); font-family: inherit; font-size: 13px; outline: none; transition: border-color 0.2s ease; }
@@ -192,7 +192,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.active { display: flex; }
-.modal { background: #111; border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal { background: #111; border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .modal-title { font-size: 18px; font-weight: 700; }
 .modal-close { width: 32px; height: 32px; border-radius: 50%; background: #1a1a1a; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -234,13 +234,6 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 
 .rate-limit-timer { position: fixed; top: 70px; right: 20px; background: rgba(255, 69, 58, 0.15); border: 1px solid rgba(255, 69, 58, 0.4); border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--red); z-index: 100; display: none; }
 .rate-limit-timer.active { display: block; }
-
-.links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-.link-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; text-decoration: none; color: var(--text-primary); }
-.link-card:hover { border-color: var(--card-border-hover); transform: translateY(-2px); }
-.link-card-icon { width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.link-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.link-card-desc { font-size: 11px; color: var(--text-secondary); }
 
 .clock-display { text-align: center; padding: 30px 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; margin-bottom: 20px; }
 .clock-time { font-size: 48px; font-weight: 700; letter-spacing: -2px; margin-bottom: 8px; }
@@ -325,9 +318,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
 .saved-set-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
 .saved-set-card:hover { border-color: var(--card-border-hover); }
 
-/* ==========================================
-   NOVO: Estilos da Loading Overlay
-   ========================================== */
+/* Loading Overlay */
 .loading-overlay {
   display: none;
   position: fixed;
@@ -354,4 +345,19 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; back
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Spinner no modal de Join Responses */
+#joinResponsesSpinner {
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+#joinResponsesSpinner.active {
+  display: flex;
 }
