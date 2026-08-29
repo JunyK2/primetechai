@@ -3,19 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- CÓDIGO 1 INICIADO -->
-<!-- Tag do Manifesto -->
-<link rel="manifest" href="./manifest.json">
-
-<!-- Cor da barra de status no celular (Preto AMOLED) -->
-<meta name="theme-color" content="#000000">
-
-<!-- Ícones de atalho -->
-<link rel="icon" type="image/png" href="./logo.png">
-<link rel="apple-touch-icon" href="./logo.png">
-<!-- CÓDIGO 1 FINALIZADO -->
-
 <title>PRIME AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +27,7 @@
       </div>
     </div>
 
-    <h1 class="section-title"><span>Análise</span><span>Multi-Timeframe</span></h1>
+    <h1 class="section-title">Análise Multi-Timeframe</h1>
 
     <div class="requests-counter">
       <span class="requests-counter-label">Requisições hoje</span>
@@ -76,7 +63,6 @@
               </div>
             </div>
             
-            <!-- NOVO: Prompt Personalizado nas Configurações -->
             <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border);">
               <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">✏️ Prompt Personalizado</div>
               <textarea class="api-input" id="globalCustomPrompt" rows="6" style="width: 100%; resize: vertical; font-size: 12px; line-height: 1.5;" placeholder="Cole aqui seu prompt personalizado. Ele será usado em todas as análises. O prompt da tabela será adicionado automaticamente ao copiar."></textarea>
@@ -291,7 +277,7 @@
         <div class="logo-text">PRIME AI</div>
       </div>
     </div>
-    <h1 class="section-title"><span>Análises</span><span>Salvas</span></h1>
+    <h1 class="section-title">Análises Salvas</h1>
     <div id="firebaseWarning" class="firebase-warning" style="display: none;">
       ⚠️ Modo Experimental ativo - Dados salvos no navegador serão perdidos ao recarregar a página.
     </div>
@@ -365,7 +351,7 @@
         <div class="logo-text">PRIME AI</div>
       </div>
     </div>
-    <h1 class="section-title"><span>Análise</span><span>Manual</span></h1>
+    <h1 class="section-title">Análise Manual</h1>
     <div style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.6;">
       Use esta página para analisar sem gastar requisições da API. Copie o prompt, analise por fora (Gemini, ChatGPT, etc), cole a resposta aqui e o site processa tudo.
     </div>
@@ -525,7 +511,6 @@
   </div>
 </div>
 
-<!-- NOVA ABA: Sinal Manual -->
 <div class="page" id="pageManualSignal">
   <div class="container">
     <div class="header">
@@ -534,7 +519,7 @@
         <div class="logo-text">PRIME AI</div>
       </div>
     </div>
-    <h1 class="section-title"><span>Sinal</span><span>Manual</span></h1>
+    <h1 class="section-title">Sinal Manual</h1>
     <div style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.6;">
       Configure manualmente a data/hora e os preços de entrada, alvo e stop. O site gera os gráficos com as linhas marcadas automaticamente.
     </div>
@@ -581,13 +566,11 @@
       <input type="number" class="date-input" id="signalTarget" placeholder="Ex: 68000.00" step="any" style="width: 100%;">
     </div>
 
-    <!-- MOVIDO: Copiar Prompt da Comparação ACIMA de Gerar Gráficos -->
     <button class="btn-secondary" onclick="copyComparisonPrompt()" style="margin-top: 8px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-      Copiar Prompt da Comparação
+      Copiar Prompt de Comparação
     </button>
 
-    <!-- NOVO: Colar Tabela de Comparação -->
     <button class="btn-secondary" onclick="pasteComparisonTable()" style="margin-top: 8px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
       Colar Tabela de Comparação
@@ -641,7 +624,6 @@
         Adicionar Análise
       </button>
 
-      <!-- NOVO: Juntar Análises -->
       <button class="btn-secondary" onclick="joinSignalAnalyses()" style="margin-top: 8px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
         Juntar Análises
@@ -664,7 +646,6 @@
   </div>
 </div>
 
-<!-- Otimizador de Prompt Page -->
 <div class="page" id="pageOptimizer">
   <div class="container">
     <div class="header">
@@ -673,7 +654,7 @@
         <div class="logo-text">PRIME AI</div>
       </div>
     </div>
-    <h1 class="section-title"><span>Otimizador</span><span>de Prompt</span></h1>
+    <h1 class="section-title">Otimizador de Prompt</h1>
 
     <div class="asset-section">
       <div class="asset-label">Ativo</div>
@@ -758,13 +739,10 @@
   </div>
 </div>
 
-<!-- Floating analysis button (Análise Manual) -->
 <button class="floating-analysis-btn" id="floatingAnalysisBtn" onclick="toggleFloatingAnalysis()">1</button>
 
-<!-- Floating signal button (Sinal Manual) -->
 <button class="floating-analysis-btn" id="floatingSignalBtn" onclick="toggleFloatingSignal()" style="display: none;">1</button>
 
-<!-- Add Analysis Popup -->
 <div class="modal-overlay" id="addAnalysisPopup">
   <div class="modal" style="max-width: 500px;">
     <div class="modal-header">
@@ -782,7 +760,6 @@
   </div>
 </div>
 
-<!-- Add Signal Popup -->
 <div class="modal-overlay" id="addSignalPopup">
   <div class="modal" style="max-width: 500px;">
     <div class="modal-header">
@@ -804,14 +781,12 @@
   </div>
 </div>
 
-<!-- Join Responses Modal -->
 <div class="modal-overlay" id="joinResponsesModal">
   <div class="modal" style="max-width: 600px; max-height: 85vh;">
     <div class="modal-header">
-      <div class="modal-title">📊 Comparação de Análises</div>
+      <div class="modal-title">Comparação de Análises</div>
       <button class="modal-close" onclick="closeJoinResponses()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
-    <!-- NOVO: Spinner de progresso no canto -->
     <div id="joinResponsesSpinner" style="display: none; position: absolute; top: 20px; right: 20px; align-items: center; gap: 8px;">
       <div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
       <span style="font-size: 12px; color: var(--text-secondary);" id="joinResponsesSpinnerText">Verificando...</span>
@@ -820,18 +795,16 @@
   </div>
 </div>
 
-<!-- Result Modal (shared) -->
 <div class="modal-overlay" id="resultModal">
   <div class="modal" style="max-width: 700px; max-height: 90vh;">
     <div class="modal-header">
-      <div class="modal-title" id="resultModalTitle">📊 Resultado</div>
+      <div class="modal-title" id="resultModalTitle">Resultado</div>
       <button class="modal-close" onclick="closeResultModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
     <div id="resultModalContent"></div>
   </div>
 </div>
 
-<!-- Groq Progress Overlay -->
 <div class="loading-overlay" id="groqLoading">
   <div class="spinner"></div>
   <div id="groqLoadingText">Preenchendo tabela com Groq AI...</div>
@@ -846,7 +819,6 @@
   ⏳ API limitada. Tente novamente em <span id="rateLimitValue">0</span>s
 </div>
 
-<!-- REMOVIDO: pageLinks e seu item no bottom-nav -->
 <div class="bottom-nav">
   <div class="nav-inner">
     <div class="nav-item active" data-page="pageAnalysis" onclick="switchPage('pageAnalysis', this)">
@@ -872,25 +844,11 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Loading Overlay para Geração de Gráficos -->
 <div class="loading-overlay" id="chartLoading">
   <div class="spinner"></div>
   <div id="chartLoadingText">Buscando dados históricos da Binance...</div>
 </div>
 
 <script src="script.js"></script>
-
-<!-- CÓDIGO 2 INICIADO -->
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registrado com sucesso:', reg))
-        .catch(err => console.error('Erro ao registrar Service Worker:', err));
-    });
-  }
-</script>
-<!-- CÓDIGO 2 FINALIZADO -->
-
 </body>
 </html>
