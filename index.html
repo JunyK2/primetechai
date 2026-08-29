@@ -10,6 +10,16 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<!-- Tag do Manifesto -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- Cor da barra de status no celular (Preto AMOLED) -->
+<meta name="theme-color" content="#000000">
+
+<!-- Ícones de atalho -->
+<link rel="icon" type="image/png" href="./logo.png">
+<link rel="apple-touch-icon" href="./logo.png">
 </head>
 <body>
 
@@ -850,5 +860,15 @@
 </div>
 
 <script src="script.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registrado com sucesso:', reg))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    });
+  }
+</script>
 </body>
 </html>
