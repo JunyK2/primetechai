@@ -12,7 +12,7 @@ const ASSETS = [
 const TELEGRAM_BOT_TOKEN = '8857528344:AAGlCVjT6mRjSEw8v3zU30azQFbu1rpssSI';
 const TELEGRAM_CHAT_ID = '4440013813';
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-70b-versatile"; // Modelo estável e rápido da Groq (substitui o oss-120b que pode estar indisponível)
+const GROQ_MODEL = "llama-3.1-70b-versatile";
 
 let selectedAsset = 'BTCUSDT';
 let selectedAssetIcon = '₿';
@@ -54,9 +54,11 @@ let lastAnalysisPrompt = '';
 let dailyRequests = 0;
 let manualAnalyses = [];
 let currentManualAnalysisIndex = 0;
-let manualCustomPrompt = '';
 
-// Novas variáveis para Sinal Manual
+// NOVO: Prompt personalizado global
+let globalCustomPrompt = '';
+
+// Sinal Manual
 let signalAnalyses = [];
 let currentSignalAnalysisIndex = 0;
 let signalTradeData = null;
@@ -70,7 +72,6 @@ let optimizerCharts = [];
 let optimizerItems = [];
 let optimizerIsGenerating = false;
 let optimizerWinRateResult = '';
-let optimizerCustomPrompt = '';
 
 const FirebaseService = {
   enabled: false,
@@ -120,21 +121,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedExperimental = localStorage.getItem('experimental');
   const savedCapital = localStorage.getItem('capital');
   const savedRisk = localStorage.getItem('riskPercent');
+  const savedGlobalPrompt = localStorage.getItem('globalCustomPrompt');
   
   if (savedKey) document.getElementById('geminiApiKey').value = savedKey;
   if (savedModel) document.getElementById('geminiModel').value = savedModel;
   if (savedGroq) document.getElementById('groqApiKey').value = savedGroq;
   if (savedBinanceKey) document.getElementById('binanceApiKey').value = savedBinanceKey;
   if (savedBinanceSecret) document.getElementById('binanceApiSecret').value = savedBinanceSecret;
+  if (savedGlobalPrompt) {
+    globalCustomPrompt = savedGlobalPrompt;
+    document.getElementById('globalCustomPrompt').value = savedGlobalPrompt;
+  }
   
   if (savedVisual !== null) { visualTableEnabled = savedVisual === 'true'; document.getElementById('toggleVisualTable').checked = visualTableEnabled; }
   if (savedExperimental !== null) { experimentalMode = savedExperimental === 'true'; document.getElementById('toggleExperimental').checked = experimentalMode; }
   if (savedCapital) document.getElementById('capitalInput').value = savedCapital;
   if (savedRisk) document.getElementById('riskPercentInput').value = savedRisk;
   
+  // Auto-save do prompt personalizado global
+  document.getElementById('globalCustomPrompt').addEventListener('input', (e) => {
+    globalCustomPrompt = e.target.value;
+    localStorage.setItem('globalCustomPrompt', globalCustomPrompt);
+  });
+  
   setNow(); setPrintNow(); setSignalNow();
   buildAssetDropdowns();
-  startClock();
   loadSavedAnalyses();
   loadSavedSets();
   loadNotes();
@@ -162,10 +173,7 @@ function updateFirebaseWarning() {
 
 function toggleApiSettings() { const s = document.getElementById('apiSection'); s.style.display = s.style.display === 'none' ? 'block' : 'none'; }
 function toggleApiContent() { document.getElementById('apiToggle').classList.toggle('open'); document.getElementById('apiContent').classList.toggle('open'); }
-function togglePromptContent() { document.getElementById('promptToggle').classList.toggle('open'); document.getElementById('promptContent').classList.toggle('open'); }
 function toggleNotesContent() { document.getElementById('notesToggle').classList.toggle('open'); document.getElementById('notesContent').classList.toggle('open'); }
-function toggleManualPromptContent() { document.getElementById('manualPromptToggle').classList.toggle('open'); document.getElementById('manualPromptContent').classList.toggle('open'); }
-function toggleOptPromptContent() { document.getElementById('optPromptToggle').classList.toggle('open'); document.getElementById('optPromptContent').classList.toggle('open'); }
 
 function setNow() { const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); document.getElementById('chartDate').value = now.toISOString().slice(0, 16); }
 function setPrintNow() { const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); document.getElementById('printDate').value = now.toISOString().slice(0, 16); }
@@ -964,8 +972,8 @@ async function startAnalysis() {
     
     document.getElementById('resultContent').innerHTML = `<div style="text-align: center; padding: 40px 0;"><div class="spinner" style="width: 28px; height: 28px; margin: 0 auto 14px; border-width: 3px;"></div><div style="font-size: 14px; font-weight: 500;">Gerando análise com IA...</div></div>`;
     
-    const customPrompt = document.getElementById('customPrompt').value.trim();
-    let prompt = customPrompt || buildPrompt(selectedAsset);
+    // NOVO: Usa o prompt global personalizado se existir
+    let prompt = globalCustomPrompt.trim() || buildPrompt(selectedAsset);
     if (visualTableEnabled) prompt = prompt + VISUAL_TABLE_PROMPT;
     
     lastAnalysisImages = [...images];
@@ -1116,7 +1124,6 @@ async function fetchGroqTable(userResponse) {
     
     const tableData = parseVisualTable(content);
     if (!tableData) {
-      // Tenta encontrar JSON puro se as tags falharem
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
@@ -1245,7 +1252,7 @@ function copyToClipboard(elementId, btn) {
   navigator.clipboard.writeText(text).then(() => { 
     btn.classList.add('copied'); 
     btn.innerHTML = 'Copiado'; 
-    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 Copiar'; }, 1500); 
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = 'Copiar'; }, 1500); 
   }).catch(() => showToast('Erro ao copiar', 'error'));
 }
 
@@ -1518,14 +1525,12 @@ window.downloadResultChart = function() {
   showToast('Gráfico baixado!', 'success');
 };
 
-// LÓGICA MELHORADA DE WIN/LOSS
 window.verifyResultChart = async function(asset, dateStr, entry, stop, target, direction, analysisId) {
   showToast('Verificando resultado...', 'info');
   try {
     const result = await getChartFromBinance(asset, '15m', dateStr);
     const klines = result.klines;
     
-    // Encontra o índice do candle de análise para começar a verificar APENAS a partir dele
     const analysisTime = new Date(window.resultOriginalDate).getTime();
     let startIdx = 0;
     let minDiff = Infinity;
@@ -1536,14 +1541,13 @@ window.verifyResultChart = async function(asset, dateStr, entry, stop, target, d
 
     let hitTarget = false, hitStop = false, hitTargetIdx = -1, hitStopIdx = -1;
     
-    // Verifica apenas a partir do candle de análise
     for (let i = startIdx; i < klines.length; i++) {
       const high = parseFloat(klines[i][2]);
       const low = parseFloat(klines[i][3]);
       
       if (direction === 'LONG') {
-        if (high >= target) { hitTarget = true; hitTargetIdx = i; break; } // Alvo atingido primeiro
-        if (low <= stop) { hitStop = true; hitStopIdx = i; break; } // Stop atingido primeiro
+        if (high >= target) { hitTarget = true; hitTargetIdx = i; break; }
+        if (low <= stop) { hitStop = true; hitStopIdx = i; break; }
       } else {
         if (low <= target) { hitTarget = true; hitTargetIdx = i; break; }
         if (high >= stop) { hitStop = true; hitStopIdx = i; break; }
@@ -1554,24 +1558,17 @@ window.verifyResultChart = async function(asset, dateStr, entry, stop, target, d
     if (hitTarget && !hitStop) resultStatus = 'win';
     else if (hitStop && !hitTarget) resultStatus = 'loss';
     else if (hitTarget && hitStop) {
-      // Se ambos foram atingidos no mesmo candle (wick), consideramos perda por segurança ou o que veio primeiro intra-candle
       resultStatus = (hitTargetIdx < hitStopIdx) ? 'win' : 'loss';
     }
-    
-    const canvas = document.getElementById('resultSignalCanvas');
-    // REMOVIDO: Desenho do círculo verde/vermelho conforme solicitado
     
     if (analysisId) { await FirebaseService.updateAnalysis(analysisId, { result: resultStatus, verified: true }); loadSavedAnalyses(); }
     
     if (resultStatus === 'win') showToast('✅ WIN! Alvo atingido primeiro!', 'success');
-    else if (resultStatus === '') showToast('❌ LOSS! Stop atingido primeiro!', 'error');
+    else if (resultStatus === 'loss') showToast('❌ LOSS! Stop atingido primeiro!', 'error');
     else showToast('⏳ Resultado inconclusivo no período analisado', 'info');
     
   } catch (err) { showToast(`Erro na verificação: ${err.message}`, 'error'); }
 };
-
-function minPriceFromKlines(klines) { return Math.min(...klines.flatMap(k => [parseFloat(k[2]), parseFloat(k[3])])); }
-function maxPriceFromKlines(klines) { return Math.max(...klines.flatMap(k => [parseFloat(k[2]), parseFloat(k[3])])); }
 
 function closeResultModal() { document.getElementById('resultModal').classList.remove('active'); }
 
@@ -1586,7 +1583,6 @@ async function verifySavedAnalysis(id) {
     const result = await getChartFromBinance(analysis.asset, '15m', verifyDate);
     const klines = result.klines;
     
-    // Lógica melhorada para verificação salva também
     let startIdx = 0;
     const analysisTime = new Date(analysis.chartDate || analysis.date).getTime();
     let minDiff = Infinity;
@@ -1611,7 +1607,7 @@ async function verifySavedAnalysis(id) {
     
     if (hitTarget && !hitStop) result_status = 'win';
     else if (hitStop && !hitTarget) result_status = 'loss';
-    else if (hitTarget && hitStop) result_status = 'loss'; // Conservador
+    else if (hitTarget && hitStop) result_status = 'loss';
     
     await FirebaseService.updateAnalysis(id, { result: result_status, verified: true, verifyDate: verifyDate.toISOString() });
     loadSavedAnalyses();
@@ -1638,7 +1634,7 @@ function buildPrompt(asset) {
 }
 
 async function callGemini(apiKey, prompt, images) {
-  const model = document.getElementById('geminiModel').value.trim() || 'gemini-2.0-flash';
+  const model = document.getElementById('geminiModel').value.trim() || 'gemini-3.6-flash';
   const parts = [{ text: prompt }];
   images.forEach(img => {
     let base64Data, mimeType;
@@ -1654,8 +1650,8 @@ async function callGemini(apiKey, prompt, images) {
     const errText = await response.text(); let errMsg = `Gemini API: ${response.status}`;
     try { const j = JSON.parse(errText); if (j.error?.message) errMsg = j.error.message; } catch(e) {}
     if (errMsg.toLowerCase().includes('no longer available') || errMsg.toLowerCase().includes('not found')) {
-      showToast('Modelo indisponível, tentando gemini-2.0-flash...', 'error');
-      const fb = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.7, topP: 0.95, topK: 40, maxOutputTokens: 8192 } }) });
+      showToast('Modelo indisponível, tentando gemini-3.6-flash...', 'error');
+      const fb = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.7, topP: 0.95, topK: 40, maxOutputTokens: 8192 } }) });
       if (fb.ok) { const d = await fb.json(); return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.'; }
     }
     throw new Error(errMsg);
@@ -1687,9 +1683,6 @@ function extractVisualsFromText(text) {
   if (riskMatch && riskEl) { const r = riskMatch[1].toUpperCase(); riskEl.textContent = r; riskEl.style.color = r === 'BAIXO' ? 'var(--green)' : r === 'MÉDIO' ? 'var(--orange)' : 'var(--red)'; }
 }
 
-// ============================================================
-// FUNÇÕES DE GERAÇÃO DE GRÁFICOS COM LOADING OVERLAY
-// ============================================================
 async function generatePrints() {
   if (isGenerating) return;
   const btn = document.getElementById('generateBtn');
@@ -1744,7 +1737,7 @@ async function downloadAllSequential() {
     if (generatedPrints[tf]) {
       const filename = `${printAsset}_${dateStr}_${timeStr}_${tf.toUpperCase()}.jpg`;
       downloadPrint(tf, filename);
-      await sleep(500); // Espera 500ms entre downloads para garantir a ordem na galeria
+      await sleep(500);
     }
   }
   showToast('✅ Todos os gráficos baixados em ordem!', 'success');
@@ -1762,18 +1755,10 @@ async function downloadAllZip() {
   showToast('ZIP baixado!', 'success');
 }
 
-function startClock() { updateClock(); setInterval(updateClock, 1000); }
-function updateClock() {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  document.getElementById('clockTime').textContent = timeStr;
-  document.getElementById('clockDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-}
-
+// NOVO: Copiar prompt com adição automática do prompt da tabela
 function copyCurrentPrompt() {
-  const customPrompt = document.getElementById('customPrompt').value.trim();
-  const prompt = customPrompt || buildPrompt(selectedAsset) + (visualTableEnabled ? VISUAL_TABLE_PROMPT : '');
+  let prompt = globalCustomPrompt.trim() || buildPrompt(selectedAsset);
+  if (visualTableEnabled) prompt = prompt + VISUAL_TABLE_PROMPT;
   navigator.clipboard.writeText(prompt).then(() => { showToast('📋 Prompt copiado!', 'success'); }).catch(() => showToast('Erro ao copiar', 'error'));
 }
 
@@ -1782,9 +1767,8 @@ function copyTablePrompt() {
 }
 
 function copyFullPrompt() {
-  const customPrompt = document.getElementById('manualCustomPrompt').value.trim();
-  const prompt = customPrompt || buildPrompt(manualAsset) + VISUAL_TABLE_PROMPT;
-  if (customPrompt) showToast('⚠️ Usando prompt personalizado!', 'info');
+  let prompt = globalCustomPrompt.trim() || buildPrompt(manualAsset);
+  if (visualTableEnabled) prompt = prompt + VISUAL_TABLE_PROMPT;
   navigator.clipboard.writeText(prompt).then(() => { showToast('Prompt completo copiado!', 'success'); }).catch(() => showToast('Erro ao copiar', 'error'));
 }
 
@@ -1794,7 +1778,6 @@ async function processManualAnalysis() {
   
   let tableData = parseVisualTable(response);
   
-  // NOVO: Fallback para Groq se não encontrar a tabela
   if (!tableData) {
     showToast('Tabela não encontrada. Tentando extrair com Groq AI...', 'info');
     tableData = await fetchGroqTable(response);
@@ -1815,7 +1798,7 @@ async function processManualAnalysis() {
     }
     applyVisualTable(tableData, true);
     document.getElementById('manualResultSection').style.display = 'block';
-    document.getElementById('manualDateChanger').style.display = 'block'; // Mostra botão de corrigir data
+    document.getElementById('manualDateChanger').style.display = 'block';
     
     if (manualAnalyses.length === 0) {
       manualAnalyses.push({ tableData, klines: { ...manualChartKlines }, analysisDate, response, analysisTimestamp: manualAnalysisTimestamp });
@@ -1847,7 +1830,6 @@ function applyManualDateCorrection() {
   manualAnalysisDate = newDate;
   manualAnalysisTimestamp = newDate;
   
-  // Recarrega os gráficos com a nova data
   const tfs = ['4h', '1h', '15m', '5m'];
   let loadedCount = 0;
   showToast('Atualizando gráficos...', 'info');
@@ -1866,7 +1848,6 @@ function applyManualDateCorrection() {
     }
   });
   
-  // Atualiza também no array de análises se existir
   if (manualAnalyses[currentManualAnalysisIndex]) {
     manualAnalyses[currentManualAnalysisIndex].analysisDate = newDate;
     manualAnalyses[currentManualAnalysisIndex].analysisTimestamp = newDate;
@@ -2072,9 +2053,6 @@ window.verifyManualResultChart = async function(asset, dateStr, entry, stop, tar
       resultStatus = (hitTargetIdx < hitStopIdx) ? 'win' : 'loss';
     }
     
-    const canvas = document.getElementById('manualResultSignalCanvas');
-    // REMOVIDO: Desenho do círculo
-    
     if (resultStatus === 'win') showToast('✅ WIN! Alvo atingido primeiro!', 'success');
     else if (resultStatus === 'loss') showToast('❌ LOSS! Stop atingido primeiro!', 'error');
     else showToast('⏳ Resultado inconclusivo no período analisado', 'info');
@@ -2178,12 +2156,15 @@ function closeAllAnalyses() {
   showToast('Todas as análises fechadas!', 'success');
 }
 
+// NOVO: Juntar Respostas com Win/Loss All
 function joinResponses() {
   if (manualAnalyses.length === 0) { showToast('Nenhuma análise para comparar', 'error'); return; }
-  let tableHtml = '<table class="comparison-table"><tr><th>Análise</th><th>Direção</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R:R</th></tr>';
+  
+  let tableHtml = '<table class="comparison-table"><tr><th>Análise</th><th>Direção</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R:R</th><th>Resultado</th></tr>';
   let longestStop = 0, shortestTarget = Infinity;
   let longestStopIdx = -1, shortestTargetIdx = -1;
   let currentPrice = null;
+  
   manualAnalyses.forEach((a, idx) => {
     const entry = parseFloat(a.tableData.entry) || 0; const stop = parseFloat(a.tableData.stop_loss) || 0;
     const target = parseFloat(a.tableData.target) || 0; const direction = a.tableData.direction || '—';
@@ -2192,9 +2173,15 @@ function joinResponses() {
     if (risk > longestStop) { longestStop = risk; longestStopIdx = idx; }
     if (reward < shortestTarget && reward > 0) { shortestTarget = reward; shortestTargetIdx = idx; }
     if (!currentPrice && entry > 0) currentPrice = entry;
-    tableHtml += `<tr><td>${idx + 1}</td><td>${direction}</td><td>${entry}</td><td>${stop}</td><td>${target}</td><td>1:${rr}</td></tr>`;
+    
+    const resultBadge = a.result === 'win' ? '<span style="color: var(--green);">✅ WIN</span>' : 
+                        a.result === 'loss' ? '<span style="color: var(--red);">❌ LOSS</span>' : 
+                        '<span style="color: var(--text-tertiary);">—</span>';
+    
+    tableHtml += `<tr><td>${idx + 1}</td><td>${direction}</td><td>${entry}</td><td>${stop}</td><td>${target}</td><td>1:${rr}</td><td id="joinResult_${idx}">${resultBadge}</td></tr>`;
   });
   tableHtml += '</table>';
+  
   let summaryHtml = '<div class="comparison-summary">';
   summaryHtml += `<strong>Stop mais longo:</strong> Análise ${longestStopIdx + 1} (${longestStop.toFixed(2)})<br>`;
   summaryHtml += `<strong>Alvo mais curto:</strong> Análise ${shortestTargetIdx + 1} (${shortestTarget.toFixed(2)})<br>`;
@@ -2206,29 +2193,92 @@ function joinResponses() {
     summaryHtml += `<strong>Alvo (mais curto):</strong> ${currentPrice + shortestTarget}`;
   }
   summaryHtml += '</div>';
-  const downloadBtn = `<button class="btn-secondary" onclick="downloadAllResponsesTxt()" style="margin-top: 12px;">⬇️ Baixar TXT</button>`;
-  document.getElementById('joinResponsesContent').innerHTML = tableHtml + summaryHtml + downloadBtn;
+  
+  // NOVO: Botão Win/Loss? All
+  const winLossBtn = `<button class="btn-primary" onclick="verifyAllJoinResponses()" style="margin-top: 12px; background: var(--blue); color: white;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+    Win/Loss? All
+  </button>`;
+  
+  document.getElementById('joinResponsesContent').innerHTML = tableHtml + summaryHtml + winLossBtn;
   document.getElementById('joinResponsesModal').classList.add('active');
 }
 
-function closeJoinResponses() { document.getElementById('joinResponsesModal').classList.remove('active'); }
+// NOVO: Verificar todas as análises do Join Responses
+async function verifyAllJoinResponses() {
+  const spinner = document.getElementById('joinResponsesSpinner');
+  const spinnerText = document.getElementById('joinResponsesSpinnerText');
+  spinner.classList.add('active');
+  
+  for (let i = 0; i < manualAnalyses.length; i++) {
+    const a = manualAnalyses[i];
+    const entry = parseFloat(a.tableData.entry);
+    const stop = parseFloat(a.tableData.stop_loss);
+    const target = parseFloat(a.tableData.target);
+    const direction = a.tableData.direction;
+    const analysisDate = a.analysisDate;
+    
+    if (!entry || !stop || !target || !direction || !analysisDate) continue;
+    
+    spinnerText.textContent = `Verificando análise ${i + 1}/${manualAnalyses.length}...`;
+    
+    try {
+      const resultDate = new Date(new Date(analysisDate).getTime() + 2 * 24 * 60 * 60 * 1000);
+      const result = await getChartFromBinance(manualAsset, '15m', resultDate);
+      const klines = result.klines;
+      
+      let startIdx = 0;
+      const analysisTime = new Date(analysisDate).getTime();
+      let minDiff = Infinity;
+      klines.forEach((c, idx) => {
+        const diff = Math.abs(c[0] - analysisTime);
+        if (diff < minDiff) { minDiff = diff; startIdx = idx; }
+      });
 
-function downloadAllResponsesTxt() {
-  if (manualAnalyses.length === 0) return;
-  const firstAnalysis = manualAnalyses[0];
-  const dateObj = firstAnalysis.analysisDate ? new Date(firstAnalysis.analysisDate) : new Date();
-  const dateStr = dateObj.toLocaleDateString('pt-BR').replace(/\//g, '-');
-  const timeStr = dateObj.toTimeString().slice(0, 5).replace(':', '-');
-  const filename = `${manualAsset}_${dateStr}_${timeStr}_analises.txt`;
-  let content = `ANÁLISES AGRUPADAS - ${manualAsset}\nData/Hora: ${dateObj.toLocaleString('pt-BR')}\nTotal de análises: ${manualAnalyses.length}\n${'='.repeat(60)}\n\n`;
-  manualAnalyses.forEach((a, idx) => { content += `--- ANÁLISE ${idx + 1} ---\n\n${a.response || 'Sem resposta'}\n\n${'='.repeat(60)}\n\n`; });
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href);
-  showToast('📄 TXT baixado!', 'success');
+      let hitTarget = false, hitStop = false;
+      for (let idx = startIdx; idx < klines.length; idx++) {
+        const high = parseFloat(klines[idx][2]);
+        const low = parseFloat(klines[idx][3]);
+        if (direction === 'LONG') {
+          if (high >= target) { hitTarget = true; break; }
+          if (low <= stop) { hitStop = true; break; }
+        } else {
+          if (low <= target) { hitTarget = true; break; }
+          if (high >= stop) { hitStop = true; break; }
+        }
+      }
+      
+      let resultStatus = 'pending';
+      if (hitTarget && !hitStop) resultStatus = 'win';
+      else if (hitStop && !hitTarget) resultStatus = 'loss';
+      else if (hitTarget && hitStop) resultStatus = 'loss';
+      
+      manualAnalyses[i].result = resultStatus;
+      
+      const cell = document.getElementById(`joinResult_${i}`);
+      if (cell) {
+        if (resultStatus === 'win') cell.innerHTML = '<span style="color: var(--green);">✅ WIN</span>';
+        else if (resultStatus === 'loss') cell.innerHTML = '<span style="color: var(--red);">❌ LOSS</span>';
+        else cell.innerHTML = '<span style="color: var(--text-tertiary);">⏳</span>';
+      }
+      
+      await sleep(200);
+    } catch (err) {
+      console.error(`Erro ao verificar análise ${i + 1}:`, err);
+    }
+  }
+  
+  spinner.classList.remove('active');
+  showToast('✅ Verificação concluída!', 'success');
+}
+
+function closeJoinResponses() { 
+  document.getElementById('joinResponsesModal').classList.remove('active');
+  document.getElementById('joinResponsesSpinner').classList.remove('active');
 }
 
 // ============================================================
-// NOVA ABA: SINAL MANUAL
+// SINAL MANUAL
 // ============================================================
 function setSignalDirection(dir) {
   document.getElementById('signalDirLong').style.background = dir === 'LONG' ? 'rgba(48, 209, 88, 0.2)' : 'transparent';
@@ -2278,7 +2328,6 @@ async function generateManualSignal() {
     document.getElementById('signalResultSection').style.display = 'block';
     switchSignalView('custom');
     
-    // Adiciona à lista de análises de sinal
     signalAnalyses.push({
       id: Date.now().toString(),
       asset: signalAsset,
@@ -2347,27 +2396,6 @@ async function showSignalResultChart() {
   }
 }
 
-function toggleSignalResultDate() {
-  if (!signalAnalysisDate) return;
-  
-  if (signalShowingOriginal) {
-    // Vai para +2 dias
-    const analysisDate = new Date(signalAnalysisDate);
-    const resultDate = new Date(analysisDate.getTime() + 2 * 24 * 60 * 60 * 1000);
-    showSignalResultChart(); // Reutiliza a lógica
-  } else {
-    // Volta para o original
-    const tfs = ['4h', '1h', '15m', '5m'];
-    tfs.forEach(async (tf) => {
-      const result = await getChartFromBinance(signalAsset, tf, signalAnalysisDate);
-      signalCharts[tf] = result.klines;
-    });
-    signalShowingOriginal = true;
-    switchSignalView('custom');
-    showToast('Gráfico original restaurado', 'info');
-  }
-}
-
 async function saveManualSignal() {
   if (!signalTradeData) return;
   const analysisData = { 
@@ -2392,7 +2420,7 @@ async function saveManualSignal() {
   }
 }
 
-function openAddSignalPopup() { 
+function addManualSignal() { 
   document.getElementById('addSignalPopup').classList.add('active'); 
   document.getElementById('popupSignalDate').value = signalAnalysisDate || '';
 }
@@ -2426,7 +2454,6 @@ async function processPopupSignal() {
     source: 'signal'
   });
   
-  // Atualiza a visualização atual para o novo sinal
   signalAnalysisDate = date;
   signalTradeData = { entry, stop, target, direction };
   
@@ -2503,30 +2530,50 @@ function copyComparisonPrompt() {
   });
 }
 
+// NOVO: Colar Tabela de Comparação e processar automaticamente
+async function pasteComparisonTable() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('comparisonResponse').value = text;
+    showToast('Tabela colada! Processando...', 'success');
+    setTimeout(() => processComparison(), 300);
+  } catch (err) {
+    showToast('Erro ao colar. Use Ctrl+V manualmente.', 'error');
+  }
+}
+
+// CORREÇÃO: Processar Comparação agora carrega gráficos e mostra botão flutuante
 async function processComparison() {
   const response = document.getElementById('comparisonResponse').value.trim();
   if (!response) { showToast('Cole a resposta da IA primeiro', 'error'); return; }
   
   showToast('Processando comparação...', 'info');
+  const loading = document.getElementById('chartLoading');
+  const loadingText = document.getElementById('chartLoadingText');
+  loading.classList.add('active');
   
   try {
-    // Tenta encontrar o JSON na resposta
     const match = response.match(/\[COMPARISON_TABLE\]([\s\S]*?)\[\/COMPARISON_TABLE\]/);
     let data = [];
     if (match) {
       data = JSON.parse(match[1].trim());
     } else {
-      // Fallback: tenta parsear direto
       const jsonMatch = response.match(/\[[\s\S]*\]/);
       if (jsonMatch) data = JSON.parse(jsonMatch[0]);
       else throw new Error('Formato de tabela não encontrado');
     }
     
+    if (data.length === 0) throw new Error('Nenhuma análise encontrada na tabela');
+    
+    // Limpa análises anteriores de sinal
+    signalAnalyses = [];
+    
     // Converte para o formato de signalAnalyses
     const today = new Date().toISOString().slice(0, 16);
-    data.forEach((item, idx) => {
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
       signalAnalyses.push({
-        id: Date.now().toString() + idx,
+        id: Date.now().toString() + i,
         asset: signalAsset,
         date: today,
         direction: item.direction,
@@ -2535,18 +2582,34 @@ async function processComparison() {
         target: parseFloat(item.target),
         source: 'signal'
       });
-    });
+    }
     
+    // Carrega a primeira análise
     currentSignalAnalysisIndex = 0;
     const first = signalAnalyses[0];
     signalAnalysisDate = first.date;
     signalTradeData = { entry: first.entry, stop: first.stop, target: first.target, direction: first.direction };
     
-    const tfs = ['4h', '1h', '15m', '5m'];
-    for (const tf of tfs) {
-      const result = await getChartFromBinance(signalAsset, tf, signalAnalysisDate);
-      signalCharts[tf] = result.klines;
+    // CORREÇÃO: Carrega os gráficos para TODAS as análises
+    loadingText.textContent = `Carregando gráficos... 0/${data.length}`;
+    
+    for (let i = 0; i < signalAnalyses.length; i++) {
+      const analysis = signalAnalyses[i];
+      loadingText.textContent = `Carregando gráficos... ${i + 1}/${data.length}`;
+      
+      const tfs = ['4h', '1h', '15m', '5m'];
+      const charts = {};
+      for (const tf of tfs) {
+        const result = await getChartFromBinance(signalAsset, tf, analysis.date);
+        charts[tf] = result.klines;
+      }
+      analysis.klines = charts;
+      
+      await sleep(100);
     }
+    
+    // Carrega os gráficos da análise atual no signalCharts
+    signalCharts = signalAnalyses[0].klines;
     
     document.getElementById('signalResultSection').style.display = 'block';
     document.getElementById('signalDate').value = signalAnalysisDate;
@@ -2557,87 +2620,153 @@ async function processComparison() {
     
     updateFloatingSignalButton();
     switchSignalView('custom');
+    
+    loading.classList.remove('active');
     showToast(`✅ ${data.length} análises importadas com sucesso!`, 'success');
   } catch (err) {
-    showToast(`Erro ao processar: ${err.message}. Verifique se o JSON está válido.`, 'error');
+    loading.classList.remove('active');
+    showToast(`Erro ao processar: ${err.message}`, 'error');
   }
 }
 
-// ============================================================
-// LINKS TAB: BINANCE BALANCE & CALCULATOR
-// ============================================================
-async function fetchBinanceBalance() {
-  const apiKey = document.getElementById('binanceApiKey').value.trim();
-  const apiSecret = document.getElementById('binanceApiSecret').value.trim();
+// CORREÇÃO: toggleFloatingSignal agora usa os klines já carregados
+function toggleFloatingSignal() {
+  if (signalAnalyses.length === 0) return;
+  currentSignalAnalysisIndex = (currentSignalAnalysisIndex + 1) % signalAnalyses.length;
+  const analysis = signalAnalyses[currentSignalAnalysisIndex];
   
-  if (!apiKey || !apiSecret) {
-    showToast('Configure a API Key e Secret da Binance nas configurações', 'error');
-    return;
+  signalAnalysisDate = analysis.date;
+  signalTradeData = { entry: analysis.entry, stop: analysis.stop, target: analysis.target, direction: analysis.direction };
+  
+  document.getElementById('signalDate').value = analysis.date;
+  document.getElementById('signalEntry').value = analysis.entry;
+  document.getElementById('signalStop').value = analysis.stop;
+  document.getElementById('signalTarget').value = analysis.target;
+  setSignalDirection(analysis.direction);
+  
+  // Usa os klines já carregados
+  if (analysis.klines) {
+    signalCharts = analysis.klines;
   }
   
-  showToast('Buscando saldo...', 'info');
+  updateFloatingSignalButton();
+  switchSignalView('custom');
+  showToast(`Sinal ${currentSignalAnalysisIndex + 1} de ${signalAnalyses.length}`, 'info');
+}
+
+// NOVO: Juntar Análises (Sinal Manual) com Win/Loss All
+function joinSignalAnalyses() {
+  if (signalAnalyses.length === 0) { showToast('Nenhuma análise para comparar', 'error'); return; }
   
-  try {
-    // Nota: Chamadas diretas do navegador para a API da Binance podem sofrer com CORS.
-    // Em um ambiente de produção real, isso deve passar por um proxy backend.
-    // Aqui fazemos a tentativa com a assinatura HMAC SHA256.
-    const timestamp = Date.now();
-    const queryString = `timestamp=${timestamp}`;
+  let tableHtml = '<table class="comparison-table"><tr><th>Análise</th><th>Direção</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R:R</th><th>Resultado</th></tr>';
+  let longestStop = 0, shortestTarget = Infinity;
+  let longestStopIdx = -1, shortestTargetIdx = -1;
+  let currentPrice = null;
+  
+  signalAnalyses.forEach((a, idx) => {
+    const entry = a.entry || 0; const stop = a.stop || 0;
+    const target = a.target || 0; const direction = a.direction || '—';
+    const risk = Math.abs(entry - stop); const reward = Math.abs(target - entry);
+    const rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
+    if (risk > longestStop) { longestStop = risk; longestStopIdx = idx; }
+    if (reward < shortestTarget && reward > 0) { shortestTarget = reward; shortestTargetIdx = idx; }
+    if (!currentPrice && entry > 0) currentPrice = entry;
     
-    // Simulação de assinatura (em JS puro do navegador, crypto.subtle é assíncrono)
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(apiSecret);
-    const msgData = encoder.encode(queryString);
+    const resultBadge = a.result === 'win' ? '<span style="color: var(--green);">✅ WIN</span>' : 
+                        a.result === 'loss' ? '<span style="color: var(--red);">❌ LOSS</span>' : 
+                        '<span style="color: var(--text-tertiary);">—</span>';
     
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-    );
-    const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-    const signature = Array.from(new Uint8Array(signatureBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    tableHtml += `<tr><td>${idx + 1}</td><td>${direction}</td><td>${entry}</td><td>${stop}</td><td>${target}</td><td>1:${rr}</td><td id="signalJoinResult_${idx}">${resultBadge}</td></tr>`;
+  });
+  tableHtml += '</table>';
+  
+  let summaryHtml = '<div class="comparison-summary">';
+  summaryHtml += `<strong>Stop mais longo:</strong> Análise ${longestStopIdx + 1} (${longestStop.toFixed(2)})<br>`;
+  summaryHtml += `<strong>Alvo mais curto:</strong> Análise ${shortestTargetIdx + 1} (${shortestTarget.toFixed(2)})<br>`;
+  if (currentPrice && longestStop > 0 && shortestTarget > 0) {
+    const rr = (shortestTarget / longestStop).toFixed(2);
+    summaryHtml += `<br><strong>R:R conservador (entrada imediata):</strong> 1:${rr}<br>`;
+    summaryHtml += `<strong>Entrada imediata:</strong> ${currentPrice}<br>`;
+    summaryHtml += `<strong>Stop (mais longo):</strong> ${currentPrice - longestStop}<br>`;
+    summaryHtml += `<strong>Alvo (mais curto):</strong> ${currentPrice + shortestTarget}`;
+  }
+  summaryHtml += '</div>';
+  
+  const winLossBtn = `<button class="btn-primary" onclick="verifyAllSignalJoinAnalyses()" style="margin-top: 12px; background: var(--blue); color: white;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+    Win/Loss? All
+  </button>`;
+  
+  document.getElementById('joinResponsesContent').innerHTML = tableHtml + summaryHtml + winLossBtn;
+  document.getElementById('joinResponsesModal').classList.add('active');
+}
+
+// NOVO: Verificar todas as análises do Join Signal Analyses
+async function verifyAllSignalJoinAnalyses() {
+  const spinner = document.getElementById('joinResponsesSpinner');
+  const spinnerText = document.getElementById('joinResponsesSpinnerText');
+  spinner.classList.add('active');
+  
+  for (let i = 0; i < signalAnalyses.length; i++) {
+    const a = signalAnalyses[i];
+    const entry = a.entry;
+    const stop = a.stop;
+    const target = a.target;
+    const direction = a.direction;
+    const analysisDate = a.date;
     
-    const url = `https://api.binance.com/api/v3/account?${queryString}&signature=${signature}`;
+    if (!entry || !stop || !target || !direction || !analysisDate) continue;
     
-    const response = await fetch(url, {
-      headers: { 'X-MBX-APIKEY': apiKey }
-    });
+    spinnerText.textContent = `Verificando análise ${i + 1}/${signalAnalyses.length}...`;
     
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`Erro Binance: ${response.status} - ${err}`);
+    try {
+      const resultDate = new Date(new Date(analysisDate).getTime() + 2 * 24 * 60 * 60 * 1000);
+      const result = await getChartFromBinance(signalAsset, '15m', resultDate);
+      const klines = result.klines;
+      
+      let startIdx = 0;
+      const analysisTime = new Date(analysisDate).getTime();
+      let minDiff = Infinity;
+      klines.forEach((c, idx) => {
+        const diff = Math.abs(c[0] - analysisTime);
+        if (diff < minDiff) { minDiff = diff; startIdx = idx; }
+      });
+
+      let hitTarget = false, hitStop = false;
+      for (let idx = startIdx; idx < klines.length; idx++) {
+        const high = parseFloat(klines[idx][2]);
+        const low = parseFloat(klines[idx][3]);
+        if (direction === 'LONG') {
+          if (high >= target) { hitTarget = true; break; }
+          if (low <= stop) { hitStop = true; break; }
+        } else {
+          if (low <= target) { hitTarget = true; break; }
+          if (high >= stop) { hitStop = true; break; }
+        }
+      }
+      
+      let resultStatus = 'pending';
+      if (hitTarget && !hitStop) resultStatus = 'win';
+      else if (hitStop && !hitTarget) resultStatus = 'loss';
+      else if (hitTarget && hitStop) resultStatus = 'loss';
+      
+      signalAnalyses[i].result = resultStatus;
+      
+      const cell = document.getElementById(`signalJoinResult_${i}`);
+      if (cell) {
+        if (resultStatus === 'win') cell.innerHTML = '<span style="color: var(--green);">✅ WIN</span>';
+        else if (resultStatus === 'loss') cell.innerHTML = '<span style="color: var(--red);">❌ LOSS</span>';
+        else cell.innerHTML = '<span style="color: var(--text-tertiary);">⏳</span>';
+      }
+      
+      await sleep(200);
+    } catch (err) {
+      console.error(`Erro ao verificar análise ${i + 1}:`, err);
     }
-    
-    const data = await response.json();
-    const usdtBalance = data.balances.find(b => b.asset === 'USDT');
-    const free = parseFloat(usdtBalance ? usdtBalance.free : 0);
-    
-    document.getElementById('binanceBalance').textContent = `$${free.toFixed(2)}`;
-    showToast('Saldo atualizado!', 'success');
-    
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao buscar saldo (possível bloqueio CORS ou chave inválida). Use um proxy se necessário.', 'error');
-    // Fallback para demonstração se CORS bloquear
-    document.getElementById('binanceBalance').textContent = 'CORS Bloqueado';
-  }
-}
-
-function calculateRemainingTrades() {
-  const currentBalanceText = document.getElementById('binanceBalance').textContent.replace('$', '').replace(',', '.');
-  const currentBalance = parseFloat(currentBalanceText) || 0;
-  const goal = parseFloat(document.getElementById('tradeGoal').value) || 11;
-  const risk = parseFloat(document.getElementById('tradeRisk').value) || 0.12;
-  
-  if (risk <= 0) {
-    showToast('O risco por trade deve ser maior que 0', 'error');
-    return;
   }
   
-  const missing = Math.max(0, goal - currentBalance);
-  const trades = Math.ceil(missing / risk);
-  
-  document.getElementById('missingAmount').textContent = `$${missing.toFixed(2)}`;
-  document.getElementById('remainingTrades').textContent = trades;
-  document.getElementById('tradesResult').style.display = 'block';
+  spinner.classList.remove('active');
+  showToast('✅ Verificação concluída!', 'success');
 }
 
 // ============================================================
@@ -2784,9 +2913,8 @@ function renderOptimizerList() {
 }
 
 function copyOptimizerItemPrompt(idx) {
-  const customPrompt = document.getElementById('optCustomPrompt').value.trim();
-  const prompt = customPrompt || buildPrompt(optAsset) + VISUAL_TABLE_PROMPT;
-  if (customPrompt) showToast('⚠️ Usando prompt personalizado!', 'info');
+  let prompt = globalCustomPrompt.trim() || buildPrompt(optAsset);
+  if (visualTableEnabled) prompt = prompt + VISUAL_TABLE_PROMPT;
   navigator.clipboard.writeText(prompt).then(() => { showToast('📋 Prompt copiado!', 'success'); }).catch(() => showToast('Erro ao copiar', 'error'));
 }
 
@@ -3050,9 +3178,6 @@ window.verifyOptResultChart = async function(asset, dateStr, entry, stop, target
     else if (hitStop && !hitTarget) resultStatus = 'loss';
     else if (hitTarget && hitStop) resultStatus = 'loss';
     
-    const canvas = document.getElementById('optResultSignalCanvas');
-    // REMOVIDO: Círculo
-    
     if (optimizerItems[idx]) { optimizerItems[idx].result = resultStatus; renderOptimizerList(); }
     
     if (resultStatus === 'win') showToast('✅ WIN!', 'success');
@@ -3062,9 +3187,8 @@ window.verifyOptResultChart = async function(asset, dateStr, entry, stop, target
 };
 
 function copyOptimizerPrompt() {
-  const customPrompt = document.getElementById('optCustomPrompt').value.trim();
-  const prompt = customPrompt || buildPrompt(optAsset) + VISUAL_TABLE_PROMPT;
-  if (customPrompt) showToast('⚠️ Usando prompt personalizado!', 'info');
+  let prompt = globalCustomPrompt.trim() || buildPrompt(optAsset);
+  if (visualTableEnabled) prompt = prompt + VISUAL_TABLE_PROMPT;
   navigator.clipboard.writeText(prompt).then(() => { showToast('📋 Prompt copiado!', 'success'); }).catch(() => showToast('Erro ao copiar', 'error'));
 }
 
@@ -3113,8 +3237,8 @@ async function analyzeWinRate() {
   const initialCapital = total * capitalPerTrade;
   const finalBalance = initialCapital + totalPnL;
   
-  const customPrompt = document.getElementById('optCustomPrompt').value.trim();
-  const promptUsed = customPrompt || buildPrompt(optAsset) + VISUAL_TABLE_PROMPT;
+  let promptUsed = globalCustomPrompt.trim() || buildPrompt(optAsset);
+  if (visualTableEnabled) promptUsed = promptUsed + VISUAL_TABLE_PROMPT;
   
   const resultText = `📊 RESULTADO OTIMIZADOR DE PROMPT\n\n` +
     `💰 Ativo: ${optAsset}\n` +
