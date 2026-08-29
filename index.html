@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -327,7 +328,7 @@
     <div class="prints-header">
       <div class="logo" style="margin-bottom: 16px;"><div class="logo-icon" style="width: 30px; height: 30px; font-size: 14px;">P</div><div class="logo-text" style="font-size: 18px;">Prints Auto</div></div>
       <div class="prints-title">Gerador de Gráficos</div>
-      <div class="prints-subtitle">Binance • Estilo TradingView</div>
+      <div class="prints-subtitle">Binance • Estilo TradingView (Fuso Horário Local)</div>
     </div>
     <div class="asset-section">
       <div class="asset-label">Ativo</div>
@@ -711,6 +712,12 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Loading Overlay para Geração de Gráficos -->
+<div class="loading-overlay" id="chartLoading">
+  <div class="spinner"></div>
+  <div id="chartLoadingText">Buscando dados históricos da Binance...</div>
+</div>
 
 <script src="script.js"></script>
 </body>
