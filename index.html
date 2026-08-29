@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PRIME AI</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -41,11 +43,11 @@
         <div class="api-content" id="apiContent">
           <div style="padding: 0 2px 8px;">
             <div class="api-row"><span class="api-label">Gemini</span><input type="password" class="api-input" id="geminiApiKey" placeholder="API Key do Gemini"></div>
-            <div class="api-row"><span class="api-label">Modelo</span><input type="text" class="api-input" id="geminiModel" value="gemini-2.0-flash"></div>
+            <div class="api-row"><span class="api-label">Modelo</span><input type="text" class="api-input" id="geminiModel" value="gemini-3.6-flash"></div>
             <div class="api-row"><span class="api-label">Groq</span><input type="password" class="api-input" id="groqApiKey" placeholder="API Key do Groq (fallback)"></div>
             <div class="api-row"><span class="api-label">Binance</span><input type="password" class="api-input" id="binanceApiKey" placeholder="API Key da Binance"></div>
             <div class="api-row"><span class="api-label">Binance Secret</span><input type="password" class="api-input" id="binanceApiSecret" placeholder="API Secret da Binance"></div>
-            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px; padding: 8px; background: #0a0a0a; border-radius: 8px;">💡 Use <strong style="color: var(--green);">gemini-2.0-flash</strong></div>
+            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px; padding: 8px; background: #0a0a0a; border-radius: 8px;">💡 Use <strong style="color: var(--green);">gemini-3.6-flash</strong></div>
             <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border);">
               <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">🎨 Visualização</div>
               <div class="toggle-row">
@@ -60,6 +62,14 @@
                 <label class="toggle-switch"><input type="checkbox" id="toggleExperimental" checked onchange="saveToggle('experimental', this.checked)"><span class="toggle-slider"></span></label>
               </div>
             </div>
+            
+            <!-- NOVO: Prompt Personalizado nas Configurações -->
+            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">✏️ Prompt Personalizado</div>
+              <textarea class="api-input" id="globalCustomPrompt" rows="6" style="width: 100%; resize: vertical; font-size: 12px; line-height: 1.5;" placeholder="Cole aqui seu prompt personalizado. Ele será usado em todas as análises. O prompt da tabela será adicionado automaticamente ao copiar."></textarea>
+              <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 6px;">💾 Salvo automaticamente no navegador</div>
+            </div>
+            
             <button class="btn-secondary" onclick="copyCurrentPrompt()" style="margin-top: 12px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               Copiar Prompt Atual
@@ -89,18 +99,6 @@
       <div style="display: flex; gap: 8px;">
         <input type="datetime-local" class="date-input" id="chartDate" style="flex: 1;">
         <button class="btn-secondary" style="margin-top: 0; width: auto; padding: 10px 14px; font-size: 12px;" onclick="setNow()">Agora</button>
-      </div>
-    </div>
-
-    <div class="asset-section">
-      <div class="card" style="padding: 14px;">
-        <div class="api-toggle" id="promptToggle" onclick="togglePromptContent()">
-          <span class="api-toggle-text" style="font-size: 13px;">Prompt Personalizado</span>
-          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="api-content" id="promptContent">
-          <textarea class="api-input" id="customPrompt" rows="6" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
-        </div>
       </div>
     </div>
 
@@ -202,18 +200,18 @@
         </div>
 
         <div style="margin-bottom: 14px;">
-          <div class="asset-label" style="margin-bottom: 8px;">📋 Copiar para Binance</div>
+          <div class="asset-label" style="margin-bottom: 8px;">Copiar para Binance</div>
           <div class="copy-row">
             <div><div class="copy-row-label">TP Limit (USDT)</div><div class="copy-row-value" id="copyTp" style="color: var(--green);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('copyTp', this)">📋 Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('copyTp', this)">Copiar</button>
           </div>
           <div class="copy-row">
             <div><div class="copy-row-label">SL Trigger (USDT)</div><div class="copy-row-value" id="copySlTrigger" style="color: var(--red);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('copySlTrigger', this)">📋 Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('copySlTrigger', this)">Copiar</button>
           </div>
           <div class="copy-row">
             <div><div class="copy-row-label">SL Limit (USDT)</div><div class="copy-row-value" id="copySlLimit" style="color: var(--red);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('copySlLimit', this)"> Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('copySlLimit', this)">Copiar</button>
           </div>
         </div>
 
@@ -268,81 +266,6 @@
       <div class="calc-row"><span class="calc-label">Taxas LOSS</span><span class="calc-value negative" id="calcFeesLoss">—</span></div>
       <div class="calc-row"><span class="calc-label">🔴 Perda Líquida (LOSS)</span><span class="calc-value negative" id="calcLoss">—</span></div>
       <div class="calc-row"><span class="calc-label">Saldo após LOSS</span><span class="calc-value negative" id="calcBalanceLoss">—</span></div>
-    </div>
-  </div>
-</div>
-
-<div class="page" id="pageLinks">
-  <div class="container">
-    <div class="header">
-      <div class="logo">
-        <img src="logo.png" alt="PRIME AI" class="logo-img">
-        <div class="logo-text">PRIME AI</div>
-      </div>
-    </div>
-    <div class="clock-display">
-      <div class="clock-time" id="clockTime">00:00:00</div>
-      <div class="clock-date" id="clockDate">Carregando...</div>
-    </div>
-
-    <!-- NOVA ÁREA: Saldo Binance + Calculadora de Trades -->
-    <div class="card" style="margin-bottom: 16px;">
-      <div style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">💰 Saldo Binance em Tempo Real</div>
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0a0a0a; border-radius: 10px; margin-bottom: 12px;">
-        <div>
-          <div style="font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Saldo Disponível</div>
-          <div style="font-size: 22px; font-weight: 800; color: var(--green);" id="binanceBalance">$0.00</div>
-        </div>
-        <button class="btn-secondary" style="margin: 0; width: auto; padding: 8px 14px; font-size: 12px;" onclick="fetchBinanceBalance()">Atualizar</button>
-      </div>
-      
-      <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">📊 Calculadora de Trades</div>
-      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-        <div style="flex: 1;">
-          <label style="font-size: 10px; color: var(--text-tertiary); display: block; margin-bottom: 4px;">Meta (USDT)</label>
-          <input type="number" class="date-input" id="tradeGoal" value="11" step="0.01" style="width: 100%;">
-        </div>
-        <div style="flex: 1;">
-          <label style="font-size: 10px; color: var(--text-tertiary); display: block; margin-bottom: 4px;">Risco/Trade (USDT)</label>
-          <input type="number" class="date-input" id="tradeRisk" value="0.12" step="0.01" style="width: 100%;">
-        </div>
-      </div>
-      <button class="btn-secondary" style="margin: 0 0 12px 0;" onclick="calculateRemainingTrades()">Calcular Trades Restantes</button>
-      
-      <div id="tradesResult" style="display: none; padding: 12px; background: #0a0a0a; border-radius: 10px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span style="font-size: 11px; color: var(--text-secondary);">Falta para a meta:</span>
-          <span style="font-size: 14px; font-weight: 700; color: var(--green);" id="missingAmount">$0.00</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="font-size: 11px; color: var(--text-secondary);">Trades necessários:</span>
-          <span style="font-size: 18px; font-weight: 800; color: var(--blue);" id="remainingTrades">0</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="asset-label" style="margin-bottom: 12px;">Links Rápidos</div>
-    <div class="links-grid">
-      <a href="https://www.binance.com" target="_blank" class="link-card">
-        <div class="link-card-icon" style="background: rgba(240, 185, 11, 0.15); color: #f0b90b;">₿</div>
-        <div class="link-card-title">Binance</div>
-        <div class="link-card-desc">Abrir exchange</div>
-      </a>
-      <a href="https://www.tradingview.com" target="_blank" class="link-card">
-        <div class="link-card-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;"></div>
-        <div class="link-card-title">TradingView</div>
-        <div class="link-card-desc">Gráficos avançados</div>
-      </a>
-      <a href="https://www.coingecko.com" target="_blank" class="link-card">
-        <div class="link-card-icon" style="background: rgba(48, 209, 88, 0.15); color: var(--green);"></div>
-        <div class="link-card-title">CoinGecko</div>
-        <div class="link-card-desc">Preços e dados</div>
-      </a>
-      <a href="https://www.coindesk.com" target="_blank" class="link-card">
-        <div class="link-card-icon" style="background: rgba(191, 90, 242, 0.15); color: var(--purple);">📰</div>
-        <div class="link-card-title">CoinDesk</div>
-        <div class="link-card-desc">Notícias crypto</div>
-      </a>
     </div>
   </div>
 </div>
@@ -410,11 +333,11 @@
       </button>
       <button class="btn-secondary" id="downloadZipBtn" onclick="downloadAllZip()" style="display: none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        <span>Baixar Tudo em ZIP</span>
+        <span>Baixar ZIP</span>
       </button>
       <button class="btn-secondary" id="downloadAllBtn" onclick="downloadAllSequential()" style="display: none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        <span>Baixar Um a Um (Ordem 4H→5M)</span>
+        <span>Baixar Tudo</span>
       </button>
     </div>
     <div class="print-preview-grid" id="printPreviewGrid"></div>
@@ -433,12 +356,6 @@
     <div style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 20px; line-height: 1.6;">
       Use esta página para analisar sem gastar requisições da API. Copie o prompt, analise por fora (Gemini, ChatGPT, etc), cole a resposta aqui e o site processa tudo.
     </div>
-
-    <!-- NOVO: Botão Gerar e Baixar Gráficos -->
-    <button class="btn-primary" onclick="openGeneratePrintsPopup()" style="margin-bottom: 8px; background: var(--blue); color: white;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-      Gerar e Baixar Gráficos
-    </button>
 
     <button class="btn-primary" onclick="copyFullPrompt()" style="margin-bottom: 8px;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -462,18 +379,6 @@
     </div>
 
     <div class="asset-section">
-      <div class="card" style="padding: 14px;">
-        <div class="api-toggle" id="manualPromptToggle" onclick="toggleManualPromptContent()">
-          <span class="api-toggle-text" style="font-size: 13px;">Prompt Personalizado</span>
-          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="api-content" id="manualPromptContent">
-          <textarea class="api-input" id="manualCustomPrompt" rows="4" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="asset-section">
       <div class="asset-label">Resposta da IA</div>
       <textarea class="manual-analysis-area" id="manualResponse" placeholder="Cole aqui a resposta completa da IA (Gemini, ChatGPT, etc) que analisou suas prints. A IA deve ter preenchido a tabela [PRIME_TABLE] com os dados da análise."></textarea>
     </div>
@@ -484,11 +389,10 @@
         Processar Análise
       </button>
       <button class="btn-danger" onclick="clearManualResponse()" style="flex: 0.4; margin-top: 12px;">
-        🗑️ Limpar
+        Limpar
       </button>
     </div>
 
-    <!-- NOVO: Botão mudar data da análise -->
     <div id="manualDateChanger" style="display: none; margin-top: 12px;">
       <div class="card" style="padding: 14px;">
         <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">📅 Corrigir Data da Análise</div>
@@ -564,18 +468,18 @@
         </div>
 
         <div style="margin-bottom: 14px;">
-          <div class="asset-label" style="margin-bottom: 8px;">📋 Copiar para Binance</div>
+          <div class="asset-label" style="margin-bottom: 8px;">Copiar para Binance</div>
           <div class="copy-row">
             <div><div class="copy-row-label">TP Limit (USDT)</div><div class="copy-row-value" id="manualCopyTp" style="color: var(--green);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('manualCopyTp', this)">📋 Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopyTp', this)">Copiar</button>
           </div>
           <div class="copy-row">
             <div><div class="copy-row-label">SL Trigger (USDT)</div><div class="copy-row-value" id="manualCopySlTrigger" style="color: var(--red);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('manualCopySlTrigger', this)">📋 Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopySlTrigger', this)">Copiar</button>
           </div>
           <div class="copy-row">
             <div><div class="copy-row-label">SL Limit (USDT)</div><div class="copy-row-value" id="manualCopySlLimit" style="color: var(--red);">—</div></div>
-            <button class="copy-btn" onclick="copyToClipboard('manualCopySlLimit', this)">📋 Copiar</button>
+            <button class="copy-btn" onclick="copyToClipboard('manualCopySlLimit', this)">Copiar</button>
           </div>
         </div>
 
@@ -664,6 +568,18 @@
       <input type="number" class="date-input" id="signalTarget" placeholder="Ex: 68000.00" step="any" style="width: 100%;">
     </div>
 
+    <!-- MOVIDO: Copiar Prompt da Comparação ACIMA de Gerar Gráficos -->
+    <button class="btn-secondary" onclick="copyComparisonPrompt()" style="margin-top: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      Copiar Prompt da Comparação
+    </button>
+
+    <!-- NOVO: Colar Tabela de Comparação -->
+    <button class="btn-secondary" onclick="pasteComparisonTable()" style="margin-top: 8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+      Colar Tabela de Comparação
+    </button>
+
     <button class="btn-primary" onclick="generateManualSignal()" style="margin-top: 12px;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
       Gerar Gráficos
@@ -712,9 +628,10 @@
         Adicionar Análise
       </button>
 
-      <button class="btn-secondary" onclick="copyComparisonPrompt()" style="margin-top: 8px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        Copiar Prompt da Comparação
+      <!-- NOVO: Juntar Análises -->
+      <button class="btn-secondary" onclick="joinSignalAnalyses()" style="margin-top: 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M7 12l4-4 4 4 5-5"></path></svg>
+        Juntar Análises
       </button>
 
       <div class="asset-section" style="margin-top: 14px;">
@@ -785,15 +702,8 @@
 
     <div id="optPromptSection" style="display: none; margin-top: 20px;">
       <div class="card" style="padding: 14px; margin-bottom: 16px;">
-        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;"> Prompt para copiar</div>
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Prompt para copiar</div>
         <button class="btn-secondary" onclick="copyOptimizerPrompt()" style="margin-bottom: 8px;">📋 Copiar Prompt</button>
-        <div class="api-toggle" id="optPromptToggle" onclick="toggleOptPromptContent()">
-          <span class="api-toggle-text" style="font-size: 13px;">Prompt Personalizado</span>
-          <svg class="api-toggle-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="api-content" id="optPromptContent">
-          <textarea class="api-input" id="optCustomPrompt" rows="4" style="width: 100%; resize: vertical; margin-top: 8px; font-size: 12px; line-height: 1.5;" placeholder="Cole seu prompt personalizado aqui."></textarea>
-        </div>
       </div>
 
       <div class="optimizer-list" id="optimizerList"></div>
@@ -824,12 +734,12 @@
 
       <button class="btn-secondary" onclick="saveOptimizerSet()" style="margin-top: 12px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        💾 Salvar Lista de Análises
+        Salvar Lista de Análises
       </button>
 
       <button class="btn-danger" onclick="clearOptimizerPage()" style="margin-top: 12px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        ❌ Limpar Página
+        Limpar Página
       </button>
     </div>
   </div>
@@ -840,28 +750,6 @@
 
 <!-- Floating signal button (Sinal Manual) -->
 <button class="floating-analysis-btn" id="floatingSignalBtn" onclick="toggleFloatingSignal()" style="display: none;">1</button>
-
-<!-- Popup Gerar e Baixar Gráficos (Análise Manual) -->
-<div class="modal-overlay" id="generatePrintsPopup">
-  <div class="modal" style="max-width: 400px;">
-    <div class="modal-header">
-      <div class="modal-title">📸 Gerar e Baixar Gráficos</div>
-      <button class="modal-close" onclick="closeGeneratePrintsPopup()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Selecione a data e hora para gerar os 4 gráficos. Eles serão baixados automaticamente na ordem: 4H → 1H → 15M → 5M.</div>
-    <div class="modal-section">
-      <label class="modal-label">Data e Hora</label>
-      <input type="datetime-local" class="modal-input" id="popupPrintDate">
-    </div>
-    <div id="popupPrintProgress" style="display: none; margin-top: 12px;">
-      <div class="progress-container">
-        <div class="progress-bar" id="popupPrintProgressBar" style="width: 0%"></div>
-      </div>
-      <div class="progress-text" id="popupPrintProgressText">Gerando...</div>
-    </div>
-    <button class="btn-calc" onclick="generateAndDownloadPrints()" id="popupPrintBtn">Gerar e Baixar</button>
-  </div>
-</div>
 
 <!-- Add Analysis Popup -->
 <div class="modal-overlay" id="addAnalysisPopup">
@@ -910,6 +798,11 @@
       <div class="modal-title">📊 Comparação de Análises</div>
       <button class="modal-close" onclick="closeJoinResponses()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
+    <!-- NOVO: Spinner de progresso no canto -->
+    <div id="joinResponsesSpinner" style="display: none; position: absolute; top: 20px; right: 20px; align-items: center; gap: 8px;">
+      <div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
+      <span style="font-size: 12px; color: var(--text-secondary);" id="joinResponsesSpinnerText">Verificando...</span>
+    </div>
     <div id="joinResponsesContent"></div>
   </div>
 </div>
@@ -940,6 +833,7 @@
   ⏳ API limitada. Tente novamente em <span id="rateLimitValue">0</span>s
 </div>
 
+<!-- REMOVIDO: pageLinks e seu item no bottom-nav -->
 <div class="bottom-nav">
   <div class="nav-inner">
     <div class="nav-item active" data-page="pageAnalysis" onclick="switchPage('pageAnalysis', this)">
@@ -953,9 +847,6 @@
     </div>
     <div class="nav-item" data-page="pageOptimizer" onclick="switchPage('pageOptimizer', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
-    </div>
-    <div class="nav-item" data-page="pageLinks" onclick="switchPage('pageLinks', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </div>
     <div class="nav-item" data-page="pageSaved" onclick="switchPage('pageSaved', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
