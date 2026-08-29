@@ -10,16 +10,6 @@
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-
-<!-- Tag do Manifesto -->
-<link rel="manifest" href="./manifest.json">
-
-<!-- Cor da barra de status no celular (Preto AMOLED) -->
-<meta name="theme-color" content="#000000">
-
-<!-- Ícones de atalho -->
-<link rel="icon" type="image/png" href="./logo.png">
-<link rel="apple-touch-icon" href="./logo.png">
 </head>
 <body>
 
@@ -147,7 +137,7 @@
 
       <div class="chart-container" id="chartContainer" style="display: none;">
         <div class="chart-header">
-          <div class="chart-title"> Gráfico com Sinais</div>
+          <div class="chart-title">Gráfico com Sinais</div>
           <button class="chart-pnl-btn" onclick="openPnLModal()">💰 PnL Realizado</button>
         </div>
         <div class="chart-view-toggle">
@@ -791,6 +781,34 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="winLossManualModal">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <div class="modal-title">Verificação Manual Win/Loss</div>
+      <button class="modal-close" onclick="closeWinLossManualModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Preencha UMA vez e o site aplicará a todas as análises.</div>
+    <div class="modal-section">
+      <label class="modal-label">Direção do Trade</label>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-secondary" id="winLossDirLong" onclick="setWinLossDirection('LONG')" style="flex: 1; margin: 0; color: var(--green);">LONG</button>
+        <button class="btn-secondary" id="winLossDirShort" onclick="setWinLossDirection('SHORT')" style="flex: 1; margin: 0; color: var(--red);">SHORT</button>
+      </div>
+    </div>
+    <div class="modal-section">
+      <label class="modal-label">Maior preço de recuo (antes do alvo)</label>
+      <input type="number" class="modal-input" id="winLossRecuo" step="any" placeholder="Ex: 64500.00">
+      <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 4px;">Para LONG: menor preço. Para SHORT: maior preço.</div>
+    </div>
+    <div class="modal-section">
+      <label class="modal-label">Maior preço em direção ao alvo</label>
+      <input type="number" class="modal-input" id="winLossAlvo" step="any" placeholder="Ex: 67500.00">
+      <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 4px;">Para LONG: maior preço. Para SHORT: menor preço.</div>
+    </div>
+    <button class="btn-calc" onclick="executeWinLossManual()">Aplicar a Todas as Análises</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="joinResponsesModal">
   <div class="modal" style="max-width: 600px; max-height: 85vh;">
     <div class="modal-header">
@@ -860,15 +878,5 @@
 </div>
 
 <script src="script.js"></script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registrado com sucesso:', reg))
-        .catch(err => console.error('Erro ao registrar Service Worker:', err));
-    });
-  }
-</script>
 </body>
 </html>
