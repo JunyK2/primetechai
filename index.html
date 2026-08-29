@@ -3,6 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CÓDIGO 1 INICIADO -->
+<!-- Tag do Manifesto -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- Cor da barra de status no celular (Preto AMOLED) -->
+<meta name="theme-color" content="#000000">
+
+<!-- Ícones de atalho -->
+<link rel="icon" type="image/png" href="./logo.png">
+<link rel="apple-touch-icon" href="./logo.png">
+<!-- CÓDIGO 1 FINALIZADO -->
+
 <title>PRIME AI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -866,5 +879,18 @@
 </div>
 
 <script src="script.js"></script>
+
+<!-- CÓDIGO 2 INICIADO -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registrado com sucesso:', reg))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    });
+  }
+</script>
+<!-- CÓDIGO 2 FINALIZADO -->
+
 </body>
 </html>
