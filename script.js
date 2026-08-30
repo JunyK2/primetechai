@@ -34,12 +34,10 @@ let signalTradeData = null, signalAnalysisDate = null, signalCharts = {};
 let signalCurrentTf = '1h', signalCurrentView = 'custom', signalShowingOriginal = true;
 let optimizerCharts = [], optimizerItems = [], optimizerIsGenerating = false, optimizerWinRateResult = '';
 
-// Variáveis para Win/Loss manual
 let winLossDirection = 'LONG';
 let winLossRecuo = null;
 let winLossAlvo = null;
 
-// Variáveis do Gerador Tester
 let testerChartImageData = {};
 
 const FirebaseService = {
@@ -84,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setNow(); setPrintNow(); setSignalNow(); 
   buildAssetDropdowns(); loadSavedAnalyses(); loadSavedSets(); loadNotes(); updateFirebaseWarning(); updateRequestsCounter();
   
-  // Inicializar data do Gerador Tester
   const nowTester = new Date();
   nowTester.setMinutes(nowTester.getMinutes() - nowTester.getTimezoneOffset());
   if (document.getElementById('testerDateTime')) {
@@ -543,7 +540,7 @@ async function saveOptimizerSet() { const pr = optimizerItems.filter(i => i.proc
 function clearOptimizerPage() { if (!confirm('Limpar tudo?')) return; optimizerCharts = []; optimizerItems = []; optimizerWinRateResult = ''; document.getElementById('optStartDate').value = ''; document.getElementById('optEndDate').value = ''; document.getElementById('optProgressContainer').style.display = 'none'; document.getElementById('optDownloadBtn').style.display = 'none'; document.getElementById('optPromptSection').style.display = 'none'; document.getElementById('optWinRateResult').style.display = 'none'; document.getElementById('optimizerList').innerHTML = ''; document.getElementById('optWinRateBtn').style.display = 'none'; document.getElementById('optWinRateAllBtn').style.display = 'none'; showToast('Limpo!', 'success'); }
 
 // ==========================================
-// LÓGICA DO GERADOR TESTER
+// LÓGICA DO GERADOR TESTER (ATUALIZADA)
 // ==========================================
 function switchGenerator(mode) {
   const original = document.getElementById('originalGenerator');
@@ -701,17 +698,18 @@ function drawTesterTradingViewChart(klines, symbol, interval, endTimeDate) {
   
   const timeLabels = [];
   
+  // CORREÇÃO: Usar getUTCHours() e getUTCMinutes() para o gráfico de 4H
   if (interval === '4h') {
     candles.forEach((c, i) => {
       const date = new Date(c.time);
-      if (date.getHours() === 0 && date.getMinutes() === 0) {
+      if (date.getUTCHours() === 0 && date.getUTCMinutes() === 0) {
         const x = indexToX(i);
         ctx.strokeStyle = gridColor;
         ctx.beginPath();
         ctx.moveTo(x, chartTop);
         ctx.lineTo(x, chartBottom);
         ctx.stroke();
-        timeLabels.push({ x, label: String(date.getDate()) });
+        timeLabels.push({ x, label: String(date.getUTCDate()) });
       }
     });
   } else {
