@@ -928,3 +928,221 @@ async function downloadTesterSequentially() {
   btn.innerHTML = originalText;
   showToast('✅ Imagens baixadas em sequência!', 'success');
 }
+// ==========================================
+// LÓGICA DO MODAL DE RELATÓRIO
+// ==========================================
+
+let reportDirection = null;
+
+function openReportModal() {
+  if (manualAnalyses.length === 0) {
+    showToast('Faça pelo menos uma análise primeiro', 'error');
+    return;
+  }
+  
+  // Resetar campos
+  reportDirection = null;
+  document.getElementById('reportDateTime').value = '';
+  document.getElementById('reportRecuo').value = '';
+  document.getElementById('reportAlvo').value = '';
+  
+  // Resetar botões de direção
+  document.getElementById('reportDirLong').classList.remove('active');
+  document.getElementById('reportDirShort').classList.remove('active');
+  
+  // Bloquear botão de preenchimento automático
+  const btnAuto = document.getElementById('btnReportAutoFill');
+  btnAuto.disabled = true;
+  btnAuto.style.opacity = '0.5';
+  btnAuto.style.cursor = 'not-allowed';
+  
+  validateReportForm();
+  document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal() {
+  document.getElementById('reportModal').classList.remove('active');
+}
+
+function setReportDirection(dir) {
+  reportDirection = dir;
+  
+  const btnLong = document.getElementById('reportDirLong');
+  const btnShort = document.getElementById('reportDirShort');
+  
+  btnLong.classList.toggle('active', dir === 'LONG');
+  btnShort.classList.toggle('active', dir === 'SHORT');
+  
+  // Liberar botão de preenchimento automático
+  const btnAuto = document.getElementById('btnReportAutoFill');
+  btnAuto.disabled = false;
+  btnAuto.style.opacity = '1';
+  btnAuto.style.cursor = 'pointer';
+  
+  validateReportForm();
+}
+
+function setReportDateAuto() {
+  if (manualAnalyses.length === 0) {
+    showToast('Nenhuma análise encontrada', 'error');
+    return;
+  }
+  
+  const firstAnalysis = manualAnalyses[0];
+  const ad = firstAnalysis.tableData.analysis_date;
+  const at = firstAnalysis.tableData.analysis_time;
+  
+  if (ad) {
+    const parsedDate = parseAnalysisDate(ad, at);
+    if (parsedDate) {
+      document.getElementById('reportDateTime').value = parsedDate;
+      validateReportForm();
+      showToast('Data preenchida automaticamente!', 'success');
+    } else {
+      showToast('Data inválida na análise', 'error');
+    }
+  } else {
+    showToast('Data não encontrada na primeira análise', 'error');
+  }
+}
+
+async function autoFillReportPrices() {
+  const dateVal = document.getElementById('reportDateTime').value;
+  if (!dateVal) {
+    showToast('Defina a data e hora primeiro', 'error');
+    return;
+  }
+  
+  showToast('Buscando histórico de preços...', 'info');
+  const startTime = new Date(dateVal).getTime();
+  const endTime = startTime + (2 * 24 * 60 * 60 * 1000); // +2 dias
+  
+  try {
+    // Busca candles de 15m para ter uma boa resolução do movimento
+    // 192 candles de 15m = exatamente 2 dias
+    const klines = await fetchBinanceKlines(manualAsset, '15m', endTime, 192);
+    
+    let recuo = null;
+    let alvo = null;
+    
+    // Encontrar o candle mais próximo da data da análise
+    let startIdx = 0;
+    let minDiff = Infinity;
+    klines.forEach((k, i) => {
+      const diff = Math.abs(k[0] - startTime);
+      if (diff < minDiff) {
+        minDiff = diff;
+        startIdx = i;
+      }
+    });
+    
+    // Iterar a partir da data da análise para encontrar os extremos
+    for (let i = startIdx; i < klines.length; i++) {
+      const high = parseFloat(klines[i][2]);
+      const low = parseFloat(klines[i][3]);
+      
+      if (reportDirection === 'LONG') {
+        if (recuo === null || low < recuo) recuo = low;
+        if (alvo === null || high > alvo) alvo = high;
+      } else { // SHORT
+        if (recuo === null || high > recuo) recuo = high;
+        if (alvo === null || low < alvo) alvo = low;
+      }
+    }
+    
+    if (recuo !== null) document.getElementById('reportRecuo').value = recuo;
+    if (alvo !== null) document.getElementById('reportAlvo').value = alvo;
+    
+    validateReportForm();
+    showToast('Preços preenchidos com sucesso!', 'success');
+  } catch (e) {
+    showToast('Erro ao buscar histórico: ' + e.message, 'error');
+  }
+}
+
+function validateReportForm() {
+  const dir = reportDirection;
+  const date = document.getElementById('reportDateTime').value;
+  const recuo = document.getElementById('reportRecuo').value;
+  const alvo = document.getElementById('reportAlvo').value;
+  
+  const isComplete = dir && date && recuo && alvo;
+  
+  const btnCopy = document.getElementById('btnCopyReport');
+  const btnDownload = document.getElementById('btnDownloadReport');
+  
+  if (isComplete) {
+    btnCopy.disabled = false;
+    btnCopy.style.opacity = '1';
+    btnCopy.style.cursor = 'pointer';
+    btnDownload.disabled = false;
+    btnDownload.style.opacity = '1';
+    btnDownload.style.cursor = 'pointer';
+  } else {
+    btnCopy.disabled = true;
+    btnCopy.style.opacity = '0.5';
+    btnCopy.style.cursor = 'not-allowed';
+    btnDownload.disabled = true;
+    btnDownload.style.opacity = '0.5';
+    btnDownload.style.cursor = 'not-allowed';
+  }
+}
+
+function generateReportText() {
+  const dateVal = document.getElementById('reportDateTime').value;
+  const dateObj = new Date(dateVal);
+  const formattedDate = dateObj.toLocaleString('pt-BR', { 
+    day: '2-digit', month: '2-digit', year: 'numeric', 
+    hour: '2-digit', minute: '2-digit' 
+  });
+  
+  const recuo = document.getElementById('reportRecuo').value;
+  const alvo = document.getElementById('reportAlvo').value;
+  
+  // Lógica do Prompt: usa o personalizado se existir, senão o padrão
+  let promptUsed = globalCustomPrompt.trim();
+  if (!promptUsed) {
+    promptUsed = buildPrompt(manualAsset);
+  }
+  
+  let text = `Essa foi a data da análise: ${formattedDate}\n`;
+  text += `A direção em que o ativo seguiu após as análises foi essa: ${reportDirection}\n`;
+  text += `O preço que o ativo ${manualAsset} recuou antes de ir em direção ao alvo foi esse: ${recuo}\n`;
+  text += `O preço máximo que o ativo foi em direção ao alvo foi esse: ${alvo}\n`;
+  text += `O prompt utilizado para fazer as análises foi esse: ${promptUsed}\n`;
+  text += `As análises feitas foram essas:\n`;
+  
+  manualAnalyses.forEach((a, i) => {
+    text += `Analise ${i + 1}: ${a.response}\n\n`;
+  });
+  
+  text += `Caso for refazer o prompt, refaça ele sem a parte da PRIME TABLE.`;
+  
+  return text;
+}
+
+function copyReportToClipboard() {
+  const text = generateReportText();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✅ Relatório copiado para a área de transferência!', 'success');
+  }).catch(() => {
+    showToast('Erro ao copiar', 'error');
+  });
+}
+
+function downloadReportTxt() {
+  const text = generateReportText();
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `Relatorio_${manualAsset}_${dateStr}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showToast('✅ Relatório baixado em TXT!', 'success');
+}
