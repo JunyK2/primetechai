@@ -434,3 +434,34 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
   display: block;
   background: var(--bg);
 }
+/* ==========================================
+   ESTILOS DO MODAL DE RELATÓRIO (NOVO)
+   ========================================== */
+
+/* Transição suave para estados desabilitados dos botões */
+.btn-primary[disabled], 
+.btn-secondary[disabled] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Garante que o picker de data/hora use o tema escuro no Chrome/Edge/Safari */
+#reportDateTime {
+  color-scheme: dark;
+}
+
+/* Feedback visual sutil quando os botões de direção são selecionados */
+#reportDirLong.active {
+  background: rgba(48, 209, 88, 0.15) !important;
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+  font-weight: 700;
+}
+
+#reportDirShort.active {
+  background: rgba(255, 69, 58, 0.15) !important;
+  border-color: var(--red) !important;
+  color: var(--red) !important;
+  font-weight: 700;
+}
