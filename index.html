@@ -457,6 +457,12 @@
           Juntar Respostas
         </button>
 
+        <!-- NOVO BOTÃO: Copiar Relatório -->
+        <button class="btn-secondary" onclick="openReportModal()" style="margin-top: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Copiar Relatório
+        </button>
+
         <button class="btn-danger" onclick="closeAllAnalyses()" style="margin-top: 8px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           Fechar Análises
@@ -933,5 +939,59 @@
 </div>
 
 <script src="script.js"></script>
+<!-- MODAL: Gerar Relatório -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal" style="max-width: 500px;">
+    <div class="modal-header">
+      <div class="modal-title">📄 Gerar Relatório de Análise</div>
+      <button class="modal-close" onclick="closeReportModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <div class="modal-section">
+      <label class="modal-label">Direção do Trade</label>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-secondary" id="reportDirLong" onclick="setReportDirection('LONG')" style="flex: 1; margin: 0; color: var(--text-secondary);">LONG</button>
+        <button class="btn-secondary" id="reportDirShort" onclick="setReportDirection('SHORT')" style="flex: 1; margin: 0; color: var(--text-secondary);">SHORT</button>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label class="modal-label">Data e Hora da Análise</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="datetime-local" class="modal-input" id="reportDateTime" style="flex: 1;">
+        <button class="btn-secondary" onclick="setReportDateAuto()" style="width: auto; padding: 0 12px; font-size: 12px; margin: 0;">Data Auto</button>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label class="modal-label">Preço de recuo antes de ir em direção ao alvo</label>
+      <input type="number" class="modal-input" id="reportRecuo" step="any" placeholder="Ex: 64500.00" oninput="validateReportForm()">
+    </div>
+
+    <div class="modal-section">
+      <label class="modal-label">Preço máximo em direção ao alvo</label>
+      <input type="number" class="modal-input" id="reportAlvo" step="any" placeholder="Ex: 67500.00" oninput="validateReportForm()">
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 16px;">
+      <button class="btn-secondary" id="btnReportAutoFill" onclick="autoFillReportPrices()" disabled style="flex: 1; margin: 0; opacity: 0.5; cursor: not-allowed;">
+        ⚡ Preencher automaticamente
+      </button>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 12px;">
+      <button class="btn-primary" id="btnCopyReport" onclick="copyReportToClipboard()" disabled style="flex: 1; margin: 0; opacity: 0.5; cursor: not-allowed;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copiar Relatório
+      </button>
+      <button class="btn-secondary" id="btnDownloadReport" onclick="downloadReportTxt()" disabled style="flex: 1; margin: 0; opacity: 0.5; cursor: not-allowed;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Baixar TXT
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
