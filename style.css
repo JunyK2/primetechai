@@ -465,3 +465,69 @@ body { font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--red) !important;
   font-weight: 700;
 }
+/* ==========================================
+   ESTILOS PARA BOTÕES DO MODAL DE COMPARAÇÃO (NOVO)
+   ========================================== */
+
+/* Container flexível para os 4 botões do modal de comparação */
+.comparison-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Ajuste para telas muito pequenas (opcional, mas recomendado) */
+@media (max-width: 380px) {
+  .comparison-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estilização específica para os botões de download no modal */
+.comparison-actions-grid .btn-secondary {
+  margin-top: 0;
+  font-size: 12px;
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.comparison-actions-grid .btn-primary {
+  margin-top: 0;
+  font-size: 12px;
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* Ajuste na tabela de comparação para comportar as novas colunas sem quebrar */
+.comparison-table {
+  font-size: 11px;
+  table-layout: auto;
+}
+
+.comparison-table th, 
+.comparison-table td {
+  padding: 6px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+/* Destaque para a coluna de Data/Hora */
+.comparison-table .col-date {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* Destaque para a coluna de Tipo de Entrada */
+.comparison-table .col-entry-type {
+  font-weight: 600;
+  color: var(--blue);
+}
