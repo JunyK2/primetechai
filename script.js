@@ -473,15 +473,68 @@ function closeAllAnalyses() { if (!confirm('Fechar tudo?')) return; manualAnalys
 
 function joinResponses() {
   if (!manualAnalyses.length) { showToast('Nenhuma análise', 'error'); return; }
-  let th = '<table class="comparison-table"><tr><th>#</th><th>Dir</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R:R</th><th>Resultado</th></tr>';
+  
+  // Cabeçalho da tabela com as novas colunas (Data/Hora e Tipo)
+  let th = '<table class="comparison-table"><tr><th>#</th><th>Data/Hora</th><th>Dir</th><th>Tipo</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R:R</th><th>Resultado</th></tr>';
   let ls = 0, st = Infinity, li = -1, si = -1, cp = null;
-  manualAnalyses.forEach((a, i) => { const e = parseFloat(a.tableData.entry) || 0, s = parseFloat(a.tableData.stop_loss) || 0, t = parseFloat(a.tableData.target) || 0, d = a.tableData.direction || '—', r = Math.abs(e - s), rw = Math.abs(t - e), rr = r > 0 ? (rw / r).toFixed(2) : '—'; if (r > ls) { ls = r; li = i; } if (rw < st && rw > 0) { st = rw; si = i; } if (!cp && e > 0) cp = e; const rb = a.result === 'win' ? '<span style="color:var(--green);">✅ WIN</span>' : a.result === 'loss' ? '<span style="color:var(--red);">❌ LOSS</span>' : '<span style="color:var(--text-tertiary);">—</span>'; th += `<tr><td>${i + 1}</td><td>${d}</td><td>${e}</td><td>${s}</td><td>${t}</td><td>1:${rr}</td><td id="joinResult_${i}">${rb}</td></tr>`; });
+  
+  manualAnalyses.forEach((a, i) => { 
+    const e = parseFloat(a.tableData.entry) || 0; 
+    const s = parseFloat(a.tableData.stop_loss) || 0; 
+    const t = parseFloat(a.tableData.target) || 0; 
+    const d = a.tableData.direction || '—'; 
+    const entryType = a.tableData.entry_type || '—';
+    const r = Math.abs(e - s); 
+    const rw = Math.abs(t - e); 
+    const rr = r > 0 ? (rw / r).toFixed(2) : '—'; 
+    
+    if (r > ls) { ls = r; li = i; } 
+    if (rw < st && rw > 0) { st = rw; si = i; } 
+    if (!cp && e > 0) cp = e; 
+    
+    const rb = a.result === 'win' ? '<span style="color:var(--green);">✅ WIN</span>' : a.result === 'loss' ? '<span style="color:var(--red);">❌ LOSS</span>' : '<span style="color:var(--text-tertiary);">—</span>'; 
+    
+    // Formatar Data e Hora
+    let dateStr = '—';
+    if (a.analysisDate) {
+      try {
+        const dObj = new Date(a.analysisDate);
+        dateStr = dObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+      } catch(e) { dateStr = '—'; }
+    } else if (a.tableData.analysis_date && a.tableData.analysis_time) {
+      dateStr = `${a.tableData.analysis_date} ${a.tableData.analysis_time}`;
+    }
+
+    // Adiciona a linha com as novas colunas
+    th += `<tr>
+      <td>${i + 1}</td>
+      <td class="col-date">${dateStr}</td>
+      <td>${d}</td>
+      <td class="col-entry-type">${entryType}</td>
+      <td>${e}</td>
+      <td>${s}</td>
+      <td>${t}</td>
+      <td>1:${rr}</td>
+      <td id="joinResult_${i}">${rb}</td>
+    </tr>`; 
+  });
   th += '</table>';
+  
   let sh = '<div class="comparison-summary">';
   sh += `<strong>Stop mais longo:</strong> #${li + 1} (${ls.toFixed(2)})<br><strong>Alvo mais curto:</strong> #${si + 1} (${st.toFixed(2)})<br>`;
   if (cp && ls > 0 && st > 0) sh += `<br><strong>R:R conservador:</strong> 1:${(st / ls).toFixed(2)}`;
   sh += '</div>';
-  const btns = `<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn-secondary" onclick="copyComparisonTable()" style="flex:1;margin:0;">Copiar Tabela</button><button class="btn-primary" onclick="openWinLossManualModal()" style="flex:1;margin:0;background:var(--blue);color:white;">Win/Loss? All</button></div>`;
+  
+  // Novos botões com o layout em Grid (2x2)
+  const btns = `
+    <div class="comparison-actions-grid">
+      <button class="btn-secondary" onclick="copyComparisonTable()" style="margin:0;">📋 Copiar Tabela</button>
+      <button class="btn-primary" onclick="openWinLossManualModal()" style="margin:0;background:var(--blue);color:white;">⚡ Win/Loss? All</button>
+      <button class="btn-secondary" onclick="downloadComparisonSpreadsheet()" style="margin:0;">📊 Baixar Planilha</button>
+      <button class="btn-secondary" onclick="downloadResponsesTxt()" style="margin:0;">📝 Baixar Respostas</button>
+    </div>
+  `;
+  
   document.getElementById('joinResponsesContent').innerHTML = th + sh + btns;
   document.getElementById('joinResponsesModal').classList.add('active');
 }
@@ -1145,4 +1198,87 @@ function downloadReportTxt() {
   URL.revokeObjectURL(url);
   
   showToast('✅ Relatório baixado em TXT!', 'success');
+}
+// ==========================================
+// FUNÇÕES DE DOWNLOAD DO MODAL DE COMPARAÇÃO
+// ==========================================
+
+function downloadComparisonSpreadsheet() {
+  if (!manualAnalyses.length) { showToast('Nenhuma análise para exportar', 'error'); return; }
+  
+  // Cabeçalho do CSV (usando ponto e vírgula para compatibilidade com Excel PT-BR)
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "#;Data/Hora;Direção;Tipo Entrada;Entrada;Stop;Alvo;R:R;Resultado\n";
+  
+  manualAnalyses.forEach((a, i) => {
+    const e = a.tableData.entry || '—';
+    const s = a.tableData.stop_loss || '—';
+    const t = a.tableData.target || '—';
+    const d = a.tableData.direction || '—';
+    const entryType = a.tableData.entry_type || '—';
+    const r = Math.abs(parseFloat(e) - parseFloat(s));
+    const rw = Math.abs(parseFloat(t) - parseFloat(e));
+    const rr = r > 0 ? `1:${(rw / r).toFixed(2)}` : '—';
+    
+    let dateStr = '—';
+    if (a.analysisDate) {
+      try {
+        const dObj = new Date(a.analysisDate);
+        dateStr = dObj.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+      } catch(err) {}
+    } else if (a.tableData.analysis_date && a.tableData.analysis_time) {
+      dateStr = `${a.tableData.analysis_date} ${a.tableData.analysis_time}`;
+    }
+    
+    const result = a.result === 'win' ? 'WIN' : a.result === 'loss' ? 'LOSS' : 'Pendente';
+    
+    // Adiciona a linha ao CSV
+    csvContent += `${i + 1};${dateStr};${d};${entryType};${e};${s};${t};${rr};${result}\n`;
+  });
+  
+  // Cria o link e baixa o arquivo
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `Comparacao_${manualAsset}_${new Date().getTime()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  showToast('✅ Planilha baixada com sucesso!', 'success');
+}
+
+function downloadResponsesTxt() {
+  if (!manualAnalyses.length) { showToast('Nenhuma análise para exportar', 'error'); return; }
+  
+  let txtContent = `RELATÓRIO DE RESPOSTAS DAS ANÁLISES - ${manualAsset}\n`;
+  txtContent += `Gerado em: ${new Date().toLocaleString('pt-BR')}\n`;
+  txtContent += `${"=".repeat(50)}\n\n`;
+  
+  manualAnalyses.forEach((a, i) => {
+    let dateStr = 'Data não informada';
+    if (a.analysisDate) {
+      try {
+        const dObj = new Date(a.analysisDate);
+        dateStr = dObj.toLocaleString('pt-BR');
+      } catch(err) {}
+    }
+    
+    txtContent += `--- ANÁLISE ${i + 1} (${dateStr}) ---\n\n`;
+    txtContent += `${a.response}\n\n`;
+    txtContent += `${"=".repeat(50)}\n\n`;
+  });
+  
+  // Cria o Blob e baixa o arquivo TXT
+  const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `Respostas_${manualAsset}_${new Date().getTime()}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  showToast('✅ Respostas baixadas em TXT!', 'success');
 }
